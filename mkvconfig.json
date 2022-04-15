@@ -1,0 +1,8 @@
+{
+    "mkv_merge_path":"C:\\Program Files\\MKVToolNix\\mkvmerge.exe",
+    "out_folder":"mkvmerge_out",
+    "options_filename":"options.json",
+    "titles_filename":"titles.txt",
+    "mkvtitles_filename":"mkvtitles.txt",
+    "ep_var_name":"EPNUM"
+    }

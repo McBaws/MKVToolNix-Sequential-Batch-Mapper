@@ -2,11 +2,8 @@
 
 ## Notes:
 
- - I created this as way to process a bunch of mkv files in a series using the original MKVToolNix-batch program as a reference .
- - It's not that hard to use and you only need Python 3.
- - It's really useful for merging individual subtitles or dub tracks; anything that needs to be mapped to something.
- - I also nicked the GitHub readme for this from the MKVToolNix-batch
-   repo sorry.
+ - This is useful for simple remuxes where each episode has the same basic variables.
+ - My fork of this script allows you to map different titles to both the mkv and filename for each episode, and offset episode numbers by a predetermined amount.
 
 ## Dependencies:
 
@@ -14,35 +11,75 @@
 
 -  [Python 3](https://www.python.org/downloads/)
 
+## Helpful tools: 
+- [Advanced Renamer](https://www.advancedrenamer.com/) to batch rename files for step 2.
+
 ## Usage:
 
-1. Make sure all your MKV files have the same name apart from the number of the episode. 
+1. Clone this repository.
 
-2. Open `mkvtoolnix-gui.exe`.
+2. Make sure all your MKV files have the same name apart from the episode numbers. 
 
-3. Insert all the media for your first episode of the batch.
+3. Open `mkvtoolnix-gui.exe`.
 
-5. Do your edits here in the GUI including naming the output file whatever you want at the bottom if you'd like. (Leave the episode number how it is for now)
+4. Insert all the media for your first episode of the batch.
 
-6. Go to `Menu Bar > Multiplexer > Create option file`, and save it as 'options.json' in the same directory where all MKV files to be processed are. You can then close the GUI.
+5. Do your edits in the GUI, including naming the output file whatever you'd like.
+- If you want to add different attachments for each episode, see the [relevant section](#attachments).
 
-7. Open said JSON file with your favourite editor:
+6. Go to `Menu Bar > Multiplexer > Create option file`, and save it as `options.json` in the same directory as the `mkv_merge_mapper.py` script. You can then close the GUI.
 
-- Where there is an episode number (S01E**01**), replace the number with the text `EPNUM` (S01E**EPNUM**)
+7. Open said `options.json` file with your text editor:
 
-- Do this for all the file paths in the JSON file.
+- Where there is an episode number, replace the number with the text `EPNUM` (S01E**01** -> S01E**EPNUM**)
 
-6. Find the `mkvmerge.exe` executable within MKVToolNix and get its path (`Shift + Right-Click > Copy as path` from Windows File Explorer).
+- Do this for all the file paths in the `options.json` file.
 
-7. Download [mkvtoolnix_merge_mapper.py](https://raw.githubusercontent.com/montypx/MKVToolNix-Sequential-Batch-Mapper/main/mkvtoolnix_merge_mapper.py) from this repository and put it in the working directory with all the files so far.
+- For more options on manipulating episode numbers, see [Episode Number Modifiers](#episode-number-modifiers)
 
-8. Edit `mkvtoolnix_merge_mapper.py` and insert your path to `mkvmerge.exe` from step 6 into the quotes after the variable `mkv_merge_path` . You MUST include two backslashes `\\` in the path, where there is only one, for this to work.
+8. Find the `mkvmerge.exe` executable within MKVToolNix and get its path (`Shift + Right-Click > Copy as path` from Windows File Explorer).
 
-9. Run `mkvtoolnix_merge_mapper.py` by double-clicking it.
+9. Edit `mkvconfig.json` and insert your path to `mkvmerge.exe` from step 8 into the quotes after the variable `mkv_merge_path`. You can optionally change other script variables, but I recommend you leave them unchanged.
+
+- Note: You MUST replace every instance of a backslash `\` in mkvmerge's filepath with two backslashes `\\`.
+
+10. Optional edits to `options.json`. See next sections.
+
+11. Run `mkvtoolnix_merge_mapper.py`.
   
-10.  When prompted enter the first episode number and last episode number and your files will be sequentially created in the `mkvmerge_out` directory as it goes on.
+12. When prompted, enter the range of episode numbers you want to mux. Your files will be sequentially muxed into the set output directory (`mkvmerge_out` by default).
 
-11. Pretend you didn't see any of the hideous code that took me like 3 hours to write.
+## Titles
+
+Do this if you want to easily mux in episode titles without having to manually change them in each file.
+
+1. Create `titles.txt` in the same directory as the options file and the script.
+2. Write the desired titles for each episode in `titles.txt`, with each separate title on a new line. (The first line will be the first episode's title, the second line will be the second episode's title, and so on)
+3. Run `mkvtoolnix_merge_mapper.py`.
+4. When prompted on whether you want the title added to mkv or filename, type in `yes` or `y`.
+
+Note:
+You can now make the program use a separate list of titles in the mkv and filename. To do so, create a separate list of mkv titles named `mkvtitles.txt`.
+
+## Episode Number Modifiers
+
+Use this if you want the episode number in the script to be offset by a certain amount each time (eg. if you're muxing releases that use different episode numbers).
+
+Put `MOD()` with the offset in the brackets after any instance of EPNUM that you want to change in the options file. 
+
+For example, all my input files say "Episode 31", "Episode 32", but I want the episode numbers in my output file to be "Episode 01", "Episode 02", and so on. To do so, I would edit any instance of `EPNUM` that I would want to offset to `EPNUMMOD(-30)` in the options file.
+
+If you want the episode numbers in the mkv title changed, just put `MOD()` with your offset number in the brackets anywhere in the title field.
+
+## Attachments
+
+If you want to attach different font files for each episode, you can create a folder for each episode, with the files for each episode in their respective folders.
+
+(eg. if you have different fonts for episodes 1 and 2, make folders called `..\01` and `..\02`, with fonts for episode 1 in `..\01` and for episode 2 in `..\02`)
+
+You should then add one of the folders as an attachment in mkvtoolnix before you export as `options.json`.
+
+When editing `options.json`, you should replace the episode number in the folder name with `EPNUM`.
 
 ## License
 
