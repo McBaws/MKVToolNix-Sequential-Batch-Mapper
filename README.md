@@ -20,6 +20,8 @@
 
 2. Make sure all your MKV files have the same name apart from the episode numbers. 
 
+- Note: this is no longer necessary and can be bypassed by using [filepath autocompletion](#autocomplete-filepath).
+
 3. Open `mkvtoolnix-gui.exe`.
 
 4. Insert all the media for your first episode of the batch.
@@ -43,7 +45,7 @@
 
 - Note: You MUST replace every instance of a backslash `\` in mkvmerge's filepath with two backslashes `\\`.
 
-10. Optional edits to `options.json`. See next sections.
+10. Optional edits to `options.json`. See following sections.
 
 11. Run `mkvtoolnix_merge_mapper.py`.
   
