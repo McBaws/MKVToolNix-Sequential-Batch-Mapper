@@ -3,6 +3,7 @@ from json import JSONDecoder
 import os
 from os.path import exists
 import subprocess
+import zlib
 
 #set up config variables
 mkv_merge_path = ''
@@ -12,6 +13,7 @@ titles_filename = ''
 mkvtitles_filename = ''
 ep_var_name = ''
 out_folder = ''
+CRC_buffer = ''
 
 #default config
 default_config = {
@@ -20,7 +22,8 @@ default_config = {
 "mkvtitles_filename":"mkvtitles.txt",
 "ep_var_name":"EPNUM",
 "out_folder":"mkvmerge_out",
-"mkv_merge_path":"C:\\Program Files\\MKVToolNix\\mkvmerge.exe"
+"mkv_merge_path":"C:\\Program Files\\MKVToolNix\\mkvmerge.exe",
+"CRC_buffer":8192
 }
 
 #checks if a config file exists
@@ -32,35 +35,31 @@ if exists(config_filename):
     config = dict(default_config)
     #replaces any changed default values with those from the config file
     config.update(config_filedata)
-    #looks up and assigns config values
-    options_filename = config['options_filename']
-    titles_filename = config['titles_filename']
-    mkvtitles_filename = config['mkvtitles_filename']
-    ep_var_name = config['ep_var_name']
-    out_folder = config['out_folder']
-    mkv_merge_path = config['mkv_merge_path']
 else:
     print('Config file was not found. Using defaults.')
     config = dict(default_config)
-    options_filename = config['options_filename']
-    titles_filename = config['titles_filename']
-    mkvtitles_filename = config['mkvtitles_filename']
-    ep_var_name = config['ep_var_name']
-    out_folder = config['out_folder']
-    mkv_merge_path = config['mkv_merge_path']
+    #looks up and assigns config values
+
+options_filename = config['options_filename']
+titles_filename = config['titles_filename']
+mkvtitles_filename = config['mkvtitles_filename']
+ep_var_name = config['ep_var_name']
+out_folder = config['out_folder']
+mkv_merge_path = config['mkv_merge_path']
+CRC_buffer = config["CRC_buffer"]
 
 #checks if crucial files exist
 if not exists(mkv_merge_path):
-    print('mkvmerge was not found at given path')
+    print('\nmkvmerge was not found at given path')
     input('<press enter>')
     quit()
 
 if not exists(options_filename):
-    print('options file was not found')
+    print('\noptions file was not found')
     input('<press enter>')
     quit()
 
-print('Would you like to mux titles to mkv?')
+print('\nWould you like to mux titles to mkv?')
 titles_mux_q = input()
 if titles_mux_q.lower() == "yes" or titles_mux_q.lower() == "y":
     print("I'll take that as a yes.")
@@ -70,7 +69,7 @@ else:
     titles_mux_q = False
 
 if titles_mux_q == True:
-    print('\nWould you like to add episode number to mkv title?')
+    print('\n\nWould you like to add episode number to mkv title?')
     titles_mux_ep_q = input()
     if titles_mux_ep_q.lower() == "yes" or titles_mux_ep_q.lower() == "y":
         print("I'll take that as a yes.")
@@ -79,7 +78,7 @@ if titles_mux_q == True:
         print("I'll take that as a no.")
         titles_mux_ep_q = False
     
-print('\nWould you like to add titles to filename?')
+print('\n\nWould you like to add titles to filename?')
 titles_filename_q = input()
 if titles_filename_q.lower() == "yes" or titles_filename_q.lower() == "y":
     print("I'll take that as a yes.")
@@ -91,7 +90,7 @@ else:
 #checks if a text file containing titles exists
 if titles_mux_q == True or titles_filename_q == True:
     if not exists(mkvtitles_filename) and not exists(titles_filename):
-        print('\nCould not find titles.json or titles.txt')
+        print('\n\nCould not find titles.json or titles.txt')
         print("Will continue without including titles.")
         titles_mux_q = False
         titles_mux_ep_q = False
@@ -104,7 +103,7 @@ if titles_mux_q == True or titles_filename_q == True:
         mkvtitles_data = [line.strip() for line in mkvtitles]
 
 #asks for range of episodes to mux
-print('\nStart Episode:')
+print('\n\nStart Episode:')
 start_episode = input()
 
 print('\nEnd Episode:')
@@ -217,6 +216,86 @@ while ep_num < int(end_episode)+1:
             else:
                 options_data_temp[i + 1] = ""
 
+        if "***" in v:
+            completion_pos = []
+            #gets indexes where "***" appears
+            for x in range(len(v)):
+                if v.startswith("***", x):
+                    completion_pos.append(x)
+            for x in completion_pos:
+                #updates v
+                v = options_data_temp[i]
+                #finds first occurrence of "***"
+                x = v.index("***")
+                #the folder the file to be completed is in
+                completion_dir = v[:v[:x].rindex("\\")]
+                #the beginning of the file to be completed
+                completion_substr = v[v[:x].rindex("\\")+1:x]
+                #all the files in that directory, ie possible matches
+                completion_possible = os.listdir(completion_dir)
+                completion_result = []
+                #finds all the matches given the beginning of the file
+                for y in completion_possible:
+                    if y.startswith(completion_substr):
+                        completion_result.append(y)
+                #if there is more than one match or no matches, raise error
+                if len(completion_result) > 1:
+                    print("Usage of '***' unclear.", len(completion_result), "matching paths found:")
+                    print(completion_result)
+                    input('<press any key to exit>')
+                    quit()
+                if len(completion_result) == 0:
+                    print("\nUsage of '***' unclear. No matching paths found for:")
+                    print(v[:x+3])
+                    input('<press any key to exit>')
+                    quit()
+                #get path with matched filename
+                completion_path = os.path.join(completion_dir, completion_result[0])
+                #replace options data with matched filename
+                options_data_temp[i] = completion_path + v[x+3:]
+
+        if "**" in v:
+            v = options_data_temp[i]
+            #finds index of "**"
+            print(v)
+            x = v.index("**")
+            #the folder the file to be completed is in
+            completion_dir = v[:v[:x].rindex("\\")]
+            #the beginning of the file to be completed
+            completion_substr = v[v[:x].rindex("\\")+1:x]
+            #the file's extension
+            completion_ext = os.path.splitext(v)[1]
+            #all the files in that directory, ie possible matches
+            completion_possible = os.listdir(completion_dir)
+            completion_result = []
+            #finds all the matches given the beginning of the file
+            for y in completion_possible:
+                if y.startswith(completion_substr) and y.endswith(completion_ext):
+                    completion_result.append(y)
+            #if there is more than one match or no matches, raise error
+            if len(completion_result) > 1:
+                print("Usage of '**' unclear.", len(completion_result), "matching paths found:")
+                print(completion_result)
+                input('<press any key to exit>')
+                quit()
+            if len(completion_result) == 0:
+                print("\nUsage of '**' unclear. No matching paths found for:")
+                print(v[:x+2])
+                input('<press any key to exit>')
+                quit()
+            #get path with matched filename
+            completion_path = os.path.join(completion_dir, completion_result[0])
+            #replace options data with matched filename
+            options_data_temp[i] = completion_path
+
+    #check if CRC in output filename
+    for i, v in enumerate(options_data_temp):
+        if v == '--output':
+            if "CRC" in options_data_temp[i + 1]:
+                CRC_calc = True
+                output_file = options_data_temp[i + 1]
+            else:
+                CRC_calc = False
 
     #add all attachments in folder 
     for i, v in enumerate(options_data_temp):  
@@ -292,7 +371,21 @@ while ep_num < int(end_episode)+1:
     
     print('Starting Episode (' + str(ep_num) + '/' + str(int(end_episode)) + ') ---------------')
     subprocess.call(call_arguments)
-    print('Finished Processing ----------------')
+
+    if CRC_calc:
+        print("\n\nCRC is being calculated. This may take a while.")
+        with open(output_file, 'rb') as f:
+            crc = 0
+            while True:
+                data = f.read(CRC_buffer)
+                if not data:
+                    break
+                crc = zlib.crc32(data, crc)
+        crcstr = str(hex(crc)[2:]).upper()
+        print("CRC is [" + crcstr + "]")
+        os.rename(output_file, output_file.replace("CRC", crcstr))
+
+    print('\nFinished Processing ----------------')
     ep_num += 1
 
 print('\n\nAll files have been processed.')

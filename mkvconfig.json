@@ -4,5 +4,6 @@
     "options_filename":"options.json",
     "titles_filename":"titles.txt",
     "mkvtitles_filename":"mkvtitles.txt",
-    "ep_var_name":"EPNUM"
+    "ep_var_name":"EPNUM",
+    "CRC_buffer":8192
     }
