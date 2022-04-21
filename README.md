@@ -58,9 +58,9 @@
 12. When prompted, enter the range of episode numbers you want to mux. Your files will be sequentially muxed into the set output directory (`mkvmerge_out` by default).
 
 ## Automatic font muxing
-The script will automatically detect the fonts needed in any .ass files, and will mux them into the output file.
+The script will automatically detect the fonts needed in included .ass files, and will mux them into the output file. This feature also removes any unneeded fonts that may have been included in the input mkv files.
 
-This feature requires [FontCollector](https://github.com/moi15moi/FontCollector).
+This feature requires [FontCollector](https://github.com/moi15moi/FontCollector) to be installed, and included in the path variable.
 
 - Simply run `mkvtoolnix_merge_mapper.py`, and when prompted on whether you want to automatically mux fonts, input `yes` or `y`.
 
@@ -74,24 +74,22 @@ This feature requires [FontCollector](https://github.com/moi15moi/FontCollector)
 
 ## Autocomplete filepath
 
-Do this if the filenames you want to use have a CRC or episode name in them, which means they don't match the rule in your options file:
+The script will autocomplete the paths of specified files. Useful if the filenames you want to use have a CRC or episode name in them, which means they won't match the rule in your options file. (For example if the releases you want to remux have filenames like `Show - 01 - dumb title.mkv`, `Show - 02 - different title.mkv`, the rule `Show - EPNUM.mkv` won't work.)
 
-(eg. if the releases you want to remux have filenames like `Show - 01 - dumb title.mkv`, `Show - 02 - different title.mkv`, the rule `Show - EPNUM` won't work.)
-
-- Put three stars (`***`) wherever you want the script to autocomplete the filename. Using the example above, the rule `Show - EPNUM - ***` would match both of those filenames. This can also be used in folder names.
+- Put three stars (`***`) wherever you want the script to autocomplete the filename. Using the example above, the rule `Show - EPNUM - ***` would matchh both of those filenames. This can also be used in folder names.
 - Put two stars (`**`) if you want to specify an extension for the file. For example, let's say you have both `Show - 01 - dumb title.mkv` and `Show - 01 - dumb title.ass` in the same directory. In this case the rule `Show - EPNUM - **.mkv` would match the first file and `Show - EPNUM - **.ass` would match the second.
 - As long as your rule gives enough information to single out one file, it will be accepted.
 
 ## Calculate CRC
 
-Do this if you want the script to calculate a CRC32 hash for the file and insert it into the filename:
+The script will calculate a CRC32 hash for the file and insert it into the filename.
 
 - Include `CRC` anywhere in the output filename. The script will calculate the CRC of the output file and replace  `CRC` with it.
 - For example, if your output rule is `Show - EPNUM [CRC].mkv`, the output will be `Show - 01 [CF022A71]`.
 
 ## Titles
 
-Do this if you want to easily mux in episode titles without having to manually change them in each file:
+The script will automatically mux in episode titles without having to manually change them in each file.
 
 1. Create `titles.txt` in the same directory as the options file and the script.
 2. Write the desired titles for each episode in `titles.txt`, with each separate title on a new line. (The first line will be the first episode's title, the second line will be the second episode's title, and so on)
@@ -103,7 +101,7 @@ You can now make the script use a separate list of titles in the mkv and filenam
 
 ## Episode Number Modifiers
 
-Do this if you want the episode number in the script to be offset by a certain amount each time (eg. if you're muxing releases that use different episode numbers):
+The script will offset the episode numbers in the options file by a certain amount each time. Useful if you're muxing different releases that use different episode numbers.
 
 - Put `MOD()` with the offset in the brackets after any instance of EPNUM that you want to change in the options file. 
 
@@ -113,11 +111,11 @@ Do this if you want the episode number in the script to be offset by a certain a
 
 ## Attachments
 
-Do this if you want to attach different font files for each episode:
+The script will mux different (specified) attachments for each episode. Can be used instead of the automatic font muxer.
 
 - Create a separate folder for each episode, with the files for each episode in their respective folders.
 
-    - For example, if you have different font attachments for episodes 1 and 2, make folders called `..\01` and `..\02`, with fonts for episode 1 in `..\01` and for episode 2 in `..\02`.
+    - For example, if you have different font attachments for episodes 1 and 2, make folders called `..\01` and `..\02`, with the attachments for episode 1 in `..\01` and those for episode 2 in `..\02`.
 
 - You should then add one of the folders as an attachment in mkvtoolnix before you export as `options.json`.
 
