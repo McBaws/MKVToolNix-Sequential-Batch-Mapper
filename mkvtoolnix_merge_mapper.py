@@ -4,16 +4,10 @@ import os
 from os.path import exists
 import subprocess
 import zlib
+import shutil
 
 #set up config variables
-mkv_merge_path = ''
-options_filename = ''
 config_filename = 'mkvconfig.json'
-titles_filename = ''
-mkvtitles_filename = ''
-ep_var_name = ''
-out_folder = ''
-CRC_buffer = ''
 
 #default config
 default_config = {
@@ -22,7 +16,7 @@ default_config = {
 "mkvtitles_filename":"mkvtitles.txt",
 "ep_var_name":"EPNUM",
 "out_folder":"mkvmerge_out",
-"mkv_merge_path":"C:\\Program Files\\MKVToolNix\\mkvmerge.exe",
+"mkv_toolnix_path":"C:\\Program Files\\MKVToolNix",
 "CRC_buffer":8192
 }
 
@@ -45,8 +39,12 @@ titles_filename = config['titles_filename']
 mkvtitles_filename = config['mkvtitles_filename']
 ep_var_name = config['ep_var_name']
 out_folder = config['out_folder']
-mkv_merge_path = config['mkv_merge_path']
 CRC_buffer = config["CRC_buffer"]
+mkv_toolnix_path = config['mkv_toolnix_path']
+mkv_merge_path = mkv_toolnix_path + "\\mkvmerge.exe"
+mkv_extract_path = mkv_toolnix_path + "\\mkvextract.exe"
+mkv_propedit_path = mkv_toolnix_path + "\\mkvpropedit.exe"
+mkv_info_path = mkv_toolnix_path + "\\mkvinfo.exe"
 
 #checks if crucial files exist
 if not exists(mkv_merge_path):
@@ -59,7 +57,16 @@ if not exists(options_filename):
     input('<press enter>')
     quit()
 
-print('\nWould you like to mux titles to mkv?')
+print('\nWould you like to mux fonts automatically?')
+auto_font_q = input()
+if auto_font_q.lower() == "yes" or auto_font_q.lower() == "y":
+    print("I'll take that as a yes.")
+    auto_font_q = True
+else:
+    print("I'll take that as a no.")
+    auto_font_q = False
+
+print('\n\nWould you like to mux titles to mkv?')
 titles_mux_q = input()
 if titles_mux_q.lower() == "yes" or titles_mux_q.lower() == "y":
     print("I'll take that as a yes.")
@@ -96,11 +103,11 @@ if titles_mux_q == True or titles_filename_q == True:
         titles_mux_ep_q = False
         titles_filename_q = False
     if exists(titles_filename):
-        titles = open(titles_filename, 'r')
-        titles_data = [line.strip() for line in titles]
+        with open(titles_filename) as titles:
+            titles_data = [line.strip() for line in titles]
     if exists(mkvtitles_filename):
-        mkvtitles = open(mkvtitles_filename, 'r')
-        mkvtitles_data = [line.strip() for line in mkvtitles]
+        with open(mkvtitles_filename) as mkvtitles:
+            mkvtitles_data = [line.strip() for line in mkvtitles]
 
 #asks for range of episodes to mux
 print('\n\nStart Episode:')
@@ -293,9 +300,9 @@ while ep_num < int(end_episode)+1:
         if v == '--output':
             if "CRC" in options_data_temp[i + 1]:
                 CRC_calc = True
-                output_file = options_data_temp[i + 1]
             else:
                 CRC_calc = False
+            output_file = options_data_temp[i + 1]
 
     #add all attachments in folder 
     for i, v in enumerate(options_data_temp):  
@@ -303,46 +310,8 @@ while ep_num < int(end_episode)+1:
             attachment_dir = options_data_temp[i+2]
             for root, dirs, files in os.walk(attachment_dir):
                 for file in files:
-                    if file.endswith('.otf'):
-                        #print(os.path.join(root, file))
-                        options_data_temp.append("--attachment-name")
-                        options_data_temp.append(file[:-4])
-                        options_data_temp.append("--attachment-mime-type")
-                        options_data_temp.append("font/otf")
-                        options_data_temp.append("--attach-file")
-                        options_data_temp.append(os.path.join(root, file))
-                    if file.endswith('.ttf'):
-                        #print(os.path.join(root, file))
-                        options_data_temp.append("--attachment-name")
-                        options_data_temp.append(file[:-4])
-                        options_data_temp.append("--attachment-mime-type")
-                        options_data_temp.append("font/ttf")
-                        options_data_temp.append("--attach-file")
-                        options_data_temp.append(os.path.join(root, file))
-                    if file.endswith('.jpg'):
-                        #print(os.path.join(root, file))
-                        options_data_temp.append("--attachment-name")
-                        options_data_temp.append(file[:-4])
-                        options_data_temp.append("--attachment-mime-type")
-                        options_data_temp.append("image/jpeg")
-                        options_data_temp.append("--attach-file")
-                        options_data_temp.append(os.path.join(root, file))
-                    if file.endswith('.jpeg'):
-                        #print(os.path.join(root, file))
-                        options_data_temp.append("--attachment-name")
-                        options_data_temp.append(file[:-5])
-                        options_data_temp.append("--attachment-mime-type")
-                        options_data_temp.append("image/jpeg")
-                        options_data_temp.append("--attach-file")
-                        options_data_temp.append(os.path.join(root, file))
-                    if file.endswith('.png'):
-                        #print(os.path.join(root, file))
-                        options_data_temp.append("--attachment-name")
-                        options_data_temp.append(file[:-4])
-                        options_data_temp.append("--attachment-mime-type")
-                        options_data_temp.append("image/png")
-                        options_data_temp.append("--attach-file")
-                        options_data_temp.append(os.path.join(root, file))
+                    options_data_temp.append("--attach-file")
+                    options_data_temp.append(os.path.join(root, file))
 
     #remove folder attachments
     for i, v in reversed(list(enumerate(options_data_temp))):  
@@ -371,6 +340,65 @@ while ep_num < int(end_episode)+1:
     
     print('Starting Episode (' + str(ep_num) + '/' + str(int(end_episode)) + ') ---------------')
     subprocess.call(call_arguments)
+
+    if auto_font_q:
+        print("\nAutomatically muxing required fonts...")
+        #output mkvinfo for output file to a temp directory, then read it
+        temp_dir = os.path.dirname(output_file) + "\\temp"
+        mkvinfo_output_file = temp_dir + "\\mkvinfo.txt"
+        subprocess.call([mkv_info_path] + [output_file] + ["--redirect-output"] + [mkvinfo_output_file], stdout=subprocess.DEVNULL)
+        with open(mkvinfo_output_file) as mkvinfo:
+            mkvinfo_data = [line.strip() for line in mkvinfo]
+        #get track ids of all ass files
+        trackid = []
+        for i, v in enumerate(mkvinfo_data):
+            if v == "|  + Codec ID: S_TEXT/ASS":
+                for x in range(0,1000):
+                    if "Track number" in mkvinfo_data[i-x]:
+                        trackid.append(int(mkvinfo_data[i-x][-2:-1]))
+                        break
+        #extract all subtitle files from output mkv
+        extract_args = ["tracks"]
+        for i in range(0, len(trackid)):
+            extract_args.append(str(trackid[i]) + ":" + temp_dir + "\\extracted sub " + str(trackid[i]) + ".ass")
+        subprocess.call([mkv_extract_path] + [output_file] + extract_args)
+        #get attachment ids and names of all fonts
+        cur_aid = 0
+        aid = []
+        for i, v in enumerate(mkvinfo_data):
+            if v == "| + Attached":
+                cur_aid+=1
+            if "application/x-truetype-font" in v or "application/vnd.ms-opentype" in v or "application/x-font-ttf" in v or "application/x-font" in v or "application/font-sfnt" in v or "font/collection" in v or "font/otf" in v or "font/ttf" in v or "font/sfnt" in v:
+                aid.append([cur_aid, mkvinfo_data[i-1][mkvinfo_data[i-1].index("name:")+6:]])
+        #extract all fonts from output mkv
+        print("\nExtracting fonts...")
+        extract_args = ["attachments"]
+        for i in range(0, len(aid)):
+            extract_args.append(str(aid[i][0]) + ":" + temp_dir + "\\" + aid[i][1])
+        subprocess.call([mkv_extract_path] + [output_file] + extract_args, stdout=subprocess.DEVNULL)
+        #delete all fonts from output mkv
+        print("Removing fonts from output file...")
+        subprocess.call([mkv_propedit_path] + [output_file] + ["--delete-attachment", "mime-type:application/x-truetype-font", "--delete-attachment", "mime-type:application/vnd.ms-opentype", "--delete-attachment", "mime-type:application/x-font-ttf", "--delete-attachment", "mime-type:application/x-font", "--delete-attachment", "mime-type:application/font-sfnt", "--delete-attachment", "mime-type:font/collection", "--delete-attachment", "mime-type:font/otf", "--delete-attachment", "mime-type:font/sfnt", "--delete-attachment", "mime-type:font/ttf"], stdout=subprocess.DEVNULL)
+        #fontCollector
+        #detect all ass files in folder, then copy all needed fonts
+        attachment_dir = temp_dir + "\\cum"
+        if not exists(attachment_dir):
+            os.mkdir(attachment_dir)
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                if file.endswith(".ass"):
+                    print("\nFinding necessary fonts...")
+                    subprocess.call(["fontcollector", "--input", os.path.join(root, file), "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "-d"])
+        #mux needed fonts to ouput mkv
+        print("\nMuxing necessary fonts to output file...")
+        propedit_args = []
+        for root, dirs, files in os.walk(attachment_dir):
+            for file in files:
+                propedit_args.append("--add-attachment")
+                propedit_args.append(os.path.join(root, file))
+        subprocess.call([mkv_propedit_path] + [output_file] + propedit_args, stdout=subprocess.DEVNULL)
+        #remove temp dir
+        shutil.rmtree(temp_dir)
 
     if CRC_calc:
         print("\n\nCRC is being calculated. This may take a while.")

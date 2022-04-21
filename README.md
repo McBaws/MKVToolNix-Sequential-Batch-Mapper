@@ -11,8 +11,11 @@
 
 -  [Python 3](https://www.python.org/downloads/)
 
+-  [FontCollector](https://github.com/moi15moi/FontCollector) (Optional, required for [automatic font muxing](#automatic-font-muxing).)
+    - Install with `pip install git+https://github.com/moi15moi/FontCollector.git`
+
 ## Helpful tools: 
-- [Advanced Renamer](https://www.advancedrenamer.com/) to batch rename files for step 2.
+- [Advanced Renamer](https://www.advancedrenamer.com/) to batch rename files.
 
 ## Usage:
 
@@ -20,36 +23,54 @@
 
 2. Make sure all your MKV files have the same name apart from the episode numbers. 
 
-- Note: this is no longer necessary and can be bypassed by using [filepath autocompletion](#autocomplete-filepath).
+    - Note: this is no longer necessary and can be bypassed by using [filepath autocompletion](#autocomplete-filepath).
 
 3. Open `mkvtoolnix-gui.exe`.
 
 4. Insert all the media for your first episode of the batch.
 
 5. Do your edits in the GUI, including naming the output file whatever you'd like.
-- If you want to add different attachments for each episode, see the [relevant section](#attachments).
+
+    - If you want to add different attachments for each episode, see the [relevant section](#attachments).
 
 6. Go to `Menu Bar > Multiplexer > Create option file`, and save it as `options.json` in the same directory as the `mkv_merge_mapper.py` script. You can then close the GUI.
 
 7. Open said `options.json` file with your text editor:
 
-- Where there is an episode number, replace the number with the text `EPNUM` (S01E**01** -> S01E**EPNUM**)
+    - Where there is an episode number, replace the number with the text `EPNUM` (S01E**01** -> S01E**EPNUM**)
 
-- Do this for all the file paths in the `options.json` file.
+    - Do this for all the file paths in the `options.json` file.
 
-- For more options on manipulating episode numbers, see [Episode Number Modifiers](#episode-number-modifiers)
+    - For more options on manipulating episode numbers, see [Episode Number Modifiers](#episode-number-modifiers)
 
-8. Find the `mkvmerge.exe` executable within MKVToolNix and get its path (`Shift + Right-Click > Copy as path` from Windows File Explorer).
+8. Find the MKVToolNix folder and get its path. (`Shift + Right-Click > Copy as path` from Windows File Explorer).
 
-9. Edit `mkvconfig.json` and insert your path to `mkvmerge.exe` from step 8 into the quotes after the variable `mkv_merge_path`. You can optionally change other script variables, but I recommend you leave them unchanged.
+    - Typically `C:\\Program Files\\MKVToolNix`.
 
-- Note: You MUST replace every instance of a backslash `\` in mkvmerge's filepath with two backslashes `\\`.
+9. Edit `mkvconfig.json` and insert the path to the MKVToolNix folder into the quotes after the variable `mkv_merge_path`. You can also change other script variables here.
+
+    - Note: You MUST replace every instance of a backslash `\` in mkvmerge's filepath with two backslashes `\\`.
 
 10. Optional edits to `options.json`. See following sections.
 
 11. Run `mkvtoolnix_merge_mapper.py`.
   
 12. When prompted, enter the range of episode numbers you want to mux. Your files will be sequentially muxed into the set output directory (`mkvmerge_out` by default).
+
+## Automatic font muxing
+The script will automatically detect the fonts needed in any .ass files, and will mux them into the output file.
+
+This feature requires [FontCollector](https://github.com/moi15moi/FontCollector).
+
+- Simply run `mkvtoolnix_merge_mapper.py`, and when prompted on whether you want to automatically mux fonts, input `yes` or `y`.
+
+- Note: the script will only be able to mux fonts that are installed or that are in one of the input mkv files.
+
+- THIS FEATURE IS NOT FOOLPROOF. ALWAYS QC YOUR FILES.
+
+    - I recommend using [FontValidator](https://github.com/TypesettingTools/Myaamori-Aegisub-Scripts#font-validator) to check for font errors.
+
+    - Install with `pip install --user git+https://github.com/TypesettingTools/Myaamori-Aegisub-Scripts/#subdirectory=scripts/fontvalidator`
 
 ## Autocomplete filepath
 
@@ -75,7 +96,7 @@ Do this if you want to easily mux in episode titles without having to manually c
 1. Create `titles.txt` in the same directory as the options file and the script.
 2. Write the desired titles for each episode in `titles.txt`, with each separate title on a new line. (The first line will be the first episode's title, the second line will be the second episode's title, and so on)
 3. Run `mkvtoolnix_merge_mapper.py`.
-4. When prompted on whether you want the title added to mkv or filename, type in `yes` or `y`.
+4. When prompted on whether you want the title added to mkv or filename, input `yes` or `y`.
 
 Note:
 You can now make the script use a separate list of titles in the mkv and filename. To do so, create a separate list of titles named `mkvtitles.txt`. These will be muxed in as the titles of the mkv files.
@@ -86,7 +107,7 @@ Do this if you want the episode number in the script to be offset by a certain a
 
 - Put `MOD()` with the offset in the brackets after any instance of EPNUM that you want to change in the options file. 
 
-- For example, all my input files say "Episode 31", "Episode 32", but I want the episode numbers in my output file to be "Episode 01", "Episode 02", and so on. To do so, I would edit any instance of `EPNUM` that I would want to offset to `EPNUMMOD(-30)` in the options file.
+    - For example, all my input files say "Episode 31", "Episode 32", but I want the episode numbers in my output file to be "Episode 01", "Episode 02", and so on. To do so, I would edit any instance of `EPNUM` that I would want to offset to `EPNUMMOD(-30)` in the options file.
 
 - If you want the episode numbers in the mkv title changed, just put `MOD()` with your offset number in the brackets anywhere in the title field.
 
@@ -96,7 +117,7 @@ Do this if you want to attach different font files for each episode:
 
 - Create a separate folder for each episode, with the files for each episode in their respective folders.
 
-- For example, if you have different font attachments for episodes 1 and 2, make folders called `..\01` and `..\02`, with fonts for episode 1 in `..\01` and for episode 2 in `..\02`.
+    - For example, if you have different font attachments for episodes 1 and 2, make folders called `..\01` and `..\02`, with fonts for episode 1 in `..\01` and for episode 2 in `..\02`.
 
 - You should then add one of the folders as an attachment in mkvtoolnix before you export as `options.json`.
 
