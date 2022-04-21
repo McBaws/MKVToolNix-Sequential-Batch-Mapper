@@ -409,7 +409,12 @@ while ep_num < int(end_episode)+1:
                 if not data:
                     break
                 crc = zlib.crc32(data, crc)
-        crcstr = str(hex(crc)[2:]).upper()
+        crcstr = ""
+        if len(crcstr) != 8:
+            zeros = 8 - len(str(hex(crc)[2:]))
+            for i in range(0,zeros):
+                crcstr = crcstr + "0"
+        crcstr = crcstr + str(hex(crc)[2:]).upper()
         print("CRC is [" + crcstr + "]")
         os.rename(output_file, output_file.replace("CRC", crcstr))
 
