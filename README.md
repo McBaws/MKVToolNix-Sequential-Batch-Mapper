@@ -2,8 +2,8 @@
 
 ## Notes:
 
- - This is useful for simple remuxes where each episode has the same basic variables.
- - My fork of this script allows you to map different titles to both the mkv and filename for each episode, and offset episode numbers by a predetermined amount.
+ - This is useful for remuxes where each episode has the same basic input and output variables.
+ - My fork of this script allows you to map different titles to both the mkv and filename for each episode, offset episode numbers by a predetermined amount, autocomplete filenames, automatically calculate the CRC of output files, and automatically mux in required fonts.
 
 ## Dependencies:
 
