@@ -63,14 +63,15 @@ The script will automatically detect the fonts needed in included .ass files, an
 This feature requires [FontCollector](https://github.com/moi15moi/FontCollector) to be installed, and included in the path variable.
 
 - Simply run `mkvtoolnix_merge_mapper.py`, and when prompted on whether you want to automatically mux fonts, input `yes` or `y`.
+    - This preference can also be set in the `mkvconfig.json` file
 
-- Note: the script will only be able to mux fonts that are installed or that are in one of the input mkv files.
+- The script will only be able to mux fonts that are installed or that are in one of the input mkv files.
 
-- THIS FEATURE IS NOT FOOLPROOF. ALWAYS QC YOUR FILES.
+- FontCollector currently has an issue where it can't decode certain font names. As such, the script may fail to mux some fonts. 
 
-    - I recommend using [FontValidator](https://github.com/TypesettingTools/Myaamori-Aegisub-Scripts#font-validator) to check for font errors.
+    - I have introduced a feature where a log of FontCollector's activity is generated in the output directory, and all fonts from input mkvs will be copied to a `Fonts` folder. This should make it easier to spot and fix errors. It can be toggled in `mkvconfig.json`.
 
-    - Install with `pip install --user git+https://github.com/TypesettingTools/Myaamori-Aegisub-Scripts/#subdirectory=scripts/fontvalidator`
+    - I recommend using [FontValidator](https://github.com/TypesettingTools/Myaamori-Aegisub-Scripts#font-validator) to check for missing fonts.
 
 ## Autocomplete filepath
 
@@ -95,6 +96,8 @@ The script will automatically mux in episode titles without having to manually c
 2. Write the desired titles for each episode in `titles.txt`, with each separate title on a new line. (The first line will be the first episode's title, the second line will be the second episode's title, and so on)
 3. Run `mkvtoolnix_merge_mapper.py`.
 4. When prompted on whether you want the title added to mkv or filename, input `yes` or `y`.
+
+    - This preference can now be set in the `mkvconfig.json` file
 
 Note:
 You can now make the script use a separate list of titles in the mkv and filename. To do so, create a separate list of titles named `mkvtitles.txt`. These will be muxed in as the titles of the mkv files.

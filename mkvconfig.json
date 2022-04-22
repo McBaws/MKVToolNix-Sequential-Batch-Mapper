@@ -1,9 +1,19 @@
 {
     "mkv_toolnix_path":"C:\\Program Files\\MKVToolNix",
+
     "out_folder":"mkvmerge_out",
+    "ep_var_name":"EPNUM",
+
     "options_filename":"options.json",
     "titles_filename":"titles.txt",
     "mkvtitles_filename":"mkvtitles.txt",
-    "ep_var_name":"EPNUM",
-    "CRC_buffer":8192
+    
+    "CRC_buffer":8192,
+
+    "auto_font_q":"",
+    "font_collector_log":"yes",
+
+    "titles_filename_q":"",
+    "titles_mux_q":"",
+    "titles_mux_ep_q":""
     }

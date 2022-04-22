@@ -5,6 +5,7 @@ from os.path import exists
 import subprocess
 import zlib
 import shutil
+import datetime
 
 #set up config variables
 config_filename = 'mkvconfig.json'
@@ -17,7 +18,12 @@ default_config = {
 "ep_var_name":"EPNUM",
 "out_folder":"mkvmerge_out",
 "mkv_toolnix_path":"C:\\Program Files\\MKVToolNix",
-"CRC_buffer":8192
+"CRC_buffer":8192,
+"auto_font_q":"",
+"font_collector_log":"yes",
+'titles_mux_q':"",
+'titles_filename_q':"",
+'titles_mux_ep_q':""
 }
 
 #checks if a config file exists
@@ -34,12 +40,20 @@ else:
     config = dict(default_config)
     #looks up and assigns config values
 
+auto_font_q = config['auto_font_q']
+font_collector_log = config['auto_font_q']
+
+titles_mux_q = config['titles_mux_q']
+titles_filename_q = config['titles_filename_q']
+titles_mux_ep_q = config['titles_mux_ep_q']
+
 options_filename = config['options_filename']
 titles_filename = config['titles_filename']
 mkvtitles_filename = config['mkvtitles_filename']
 ep_var_name = config['ep_var_name']
 out_folder = config['out_folder']
 CRC_buffer = config["CRC_buffer"]
+
 mkv_toolnix_path = config['mkv_toolnix_path']
 mkv_merge_path = mkv_toolnix_path + "\\mkvmerge.exe"
 mkv_extract_path = mkv_toolnix_path + "\\mkvextract.exe"
@@ -57,57 +71,95 @@ if not exists(options_filename):
     input('<press enter>')
     quit()
 
-print('\nWould you like to mux fonts automatically?')
-auto_font_q = input()
-if auto_font_q.lower() == "yes" or auto_font_q.lower() == "y":
-    print("I'll take that as a yes.")
-    auto_font_q = True
-else:
-    print("I'll take that as a no.")
-    auto_font_q = False
-
-print('\n\nWould you like to mux titles to mkv?')
-titles_mux_q = input()
-if titles_mux_q.lower() == "yes" or titles_mux_q.lower() == "y":
-    print("I'll take that as a yes.")
-    titles_mux_q = True
-else:
-    print("I'll take that as a no.")
-    titles_mux_q = False
-
-if titles_mux_q == True:
-    print('\n\nWould you like to add episode number to mkv title?')
-    titles_mux_ep_q = input()
-    if titles_mux_ep_q.lower() == "yes" or titles_mux_ep_q.lower() == "y":
+if not auto_font_q:
+    print('\nWould you like to mux fonts automatically?')
+    auto_font_q = input()
+    if auto_font_q.lower() == "yes" or auto_font_q.lower() == "y":
         print("I'll take that as a yes.")
-        titles_mux_ep_q = True
+        auto_font_q = True
     else:
         print("I'll take that as a no.")
-        titles_mux_ep_q = False
-    
-print('\n\nWould you like to add titles to filename?')
-titles_filename_q = input()
-if titles_filename_q.lower() == "yes" or titles_filename_q.lower() == "y":
-    print("I'll take that as a yes.")
-    titles_filename_q = True
+        auto_font_q = False
 else:
-    print("I'll take that as a no.")
-    titles_filename_q = False
+    if auto_font_q.lower() == "yes" or auto_font_q.lower() == "y":
+        print("\nMuxing fonts automatically.")
+        auto_font_q = True
+    else:
+        print("\nNot muxing fonts automatically.")
+        auto_font_q = False
 
 #checks if a text file containing titles exists
-if titles_mux_q == True or titles_filename_q == True:
-    if not exists(mkvtitles_filename) and not exists(titles_filename):
-        print('\n\nCould not find titles.json or titles.txt')
-        print("Will continue without including titles.")
-        titles_mux_q = False
-        titles_mux_ep_q = False
-        titles_filename_q = False
-    if exists(titles_filename):
-        with open(titles_filename) as titles:
-            titles_data = [line.strip() for line in titles]
-    if exists(mkvtitles_filename):
-        with open(mkvtitles_filename) as mkvtitles:
-            mkvtitles_data = [line.strip() for line in mkvtitles]
+if not exists(mkvtitles_filename) and not exists(titles_filename):
+    print("\n\nCould not find " + titles_filename + " or " + mkvtitles_filename + ".")
+    print("Will continue without including titles.")
+    titles_mux_q = False
+    titles_mux_ep_q = False
+    titles_filename_q = False
+    titles_found = False
+if exists(titles_filename):
+    with open(titles_filename) as titles:
+        titles_data = [line.strip() for line in titles]
+    titles_found = True
+if exists(mkvtitles_filename):
+    with open(mkvtitles_filename) as mkvtitles:
+        mkvtitles_data = [line.strip() for line in mkvtitles]
+    titles_found = True
+
+if titles_found:
+    if not titles_filename_q:
+        print('\n\nWould you like to add titles to filename?')
+        titles_filename_q = input()
+        if titles_filename_q.lower() == "yes" or titles_filename_q.lower() == "y":
+            print("I'll take that as a yes.")
+            titles_filename_q = True
+        else:
+            print("I'll take that as a no.")
+            titles_filename_q = False
+    else:
+        if titles_filename_q.lower() == "yes" or titles_filename_q.lower() == "y":
+            print("\nAdding titles to filename.")
+            titles_filename_q = True
+        else:
+            print("\nNot adding titles to filename.")
+            titles_filename_q = False
+
+
+    if not titles_mux_q:
+        print('\n\nWould you like to mux titles to mkv?')
+        titles_mux_q = input()
+        if titles_mux_q.lower() == "yes" or titles_mux_q.lower() == "y":
+            print("I'll take that as a yes.")
+            titles_mux_q = True
+        else:
+            print("I'll take that as a no.")
+            titles_mux_q = False
+    else:
+        if titles_mux_q.lower() == "yes" or titles_mux_q.lower() == "y":
+            print("\nMuxing titles to mkv.")
+            titles_mux_q = True
+        else:
+            print("\nNot muxing titles to mkv.")
+            titles_mux_q = False
+
+    if titles_mux_q == True:
+        if not titles_mux_ep_q:
+            print('\n\nWould you like to add episode number to mkv title?')
+            titles_mux_ep_q = input()
+            if titles_mux_ep_q.lower() == "yes" or titles_mux_ep_q.lower() == "y":
+                print("I'll take that as a yes.")
+                titles_mux_ep_q = True
+            else:
+                print("I'll take that as a no.")
+                titles_mux_ep_q = False
+        else:
+            if titles_mux_ep_q.lower() == "yes" or titles_mux_ep_q.lower() == "y":
+                print("\nAdding episode number to mkv title.")
+                titles_mux_ep_q = True
+            else:
+                print("\nNot adding episode number to mkv title.")
+                titles_mux_ep_q = False
+
+
 
 #asks for range of episodes to mux
 print('\n\nStart Episode:')
@@ -115,12 +167,15 @@ start_episode = input()
 
 print('\nEnd Episode:')
 end_episode = input()
+print("")
 
 #loads options file
 with open(options_filename) as json_file:
     options_data = json.load(json_file)
 
 ep_num = int(start_episode)
+
+first_ep = True
 
 while ep_num < int(end_episode)+1:
     options_data_temp = []
@@ -264,7 +319,6 @@ while ep_num < int(end_episode)+1:
         if "**" in v:
             v = options_data_temp[i]
             #finds index of "**"
-            print(v)
             x = v.index("**")
             #the folder the file to be completed is in
             completion_dir = v[:v[:x].rindex("\\")]
@@ -343,12 +397,17 @@ while ep_num < int(end_episode)+1:
 
     if auto_font_q:
         print("\nAutomatically muxing required fonts...")
+
+        print("Extracting subtitle files...")
         #output mkvinfo for output file to a temp directory, then read it
         temp_dir = os.path.dirname(output_file) + "\\temp"
+        if exists(temp_dir):
+            shutil.rmtree(temp_dir)
         mkvinfo_output_file = temp_dir + "\\mkvinfo.txt"
         subprocess.call([mkv_info_path] + [output_file] + ["--redirect-output"] + [mkvinfo_output_file], stdout=subprocess.DEVNULL)
         with open(mkvinfo_output_file) as mkvinfo:
             mkvinfo_data = [line.strip() for line in mkvinfo]
+
         #get track ids of all ass files
         trackid = []
         for i, v in enumerate(mkvinfo_data):
@@ -357,11 +416,13 @@ while ep_num < int(end_episode)+1:
                     if "Track number" in mkvinfo_data[i-x]:
                         trackid.append(int(mkvinfo_data[i-x][-2:-1]))
                         break
+
         #extract all subtitle files from output mkv
         extract_args = ["tracks"]
         for i in range(0, len(trackid)):
             extract_args.append(str(trackid[i]) + ":" + temp_dir + "\\extracted sub " + str(trackid[i]) + ".ass")
         subprocess.call([mkv_extract_path] + [output_file] + extract_args)
+
         #get attachment ids and names of all fonts
         cur_aid = 0
         aid = []
@@ -370,25 +431,56 @@ while ep_num < int(end_episode)+1:
                 cur_aid+=1
             if "application/x-truetype-font" in v or "application/vnd.ms-opentype" in v or "application/x-font-ttf" in v or "application/x-font" in v or "application/font-sfnt" in v or "font/collection" in v or "font/otf" in v or "font/ttf" in v or "font/sfnt" in v:
                 aid.append([cur_aid, mkvinfo_data[i-1][mkvinfo_data[i-1].index("name:")+6:]])
+
         #extract all fonts from output mkv
-        print("\nExtracting fonts...")
+        print("\nExtracting fonts from output file...", end="")
         extract_args = ["attachments"]
         for i in range(0, len(aid)):
             extract_args.append(str(aid[i][0]) + ":" + temp_dir + "\\" + aid[i][1])
         subprocess.call([mkv_extract_path] + [output_file] + extract_args, stdout=subprocess.DEVNULL)
+        print("   Done.")
+        if font_collector_log:
+            print("\nCopying extracted fonts to folder...", end="")
+            extract_args = ["attachments"]
+            for i in range(0, len(aid)):
+                extract_args.append(str(aid[i][0]) + ":" + os.path.dirname(output_file) + "\\Fonts\\" + aid[i][1])
+            subprocess.call([mkv_extract_path] + [output_file] + extract_args, stdout=subprocess.DEVNULL)
+            print("   Done.")
+
         #delete all fonts from output mkv
-        print("Removing fonts from output file...")
+        print("Removing fonts from output file...", end="")
         subprocess.call([mkv_propedit_path] + [output_file] + ["--delete-attachment", "mime-type:application/x-truetype-font", "--delete-attachment", "mime-type:application/vnd.ms-opentype", "--delete-attachment", "mime-type:application/x-font-ttf", "--delete-attachment", "mime-type:application/x-font", "--delete-attachment", "mime-type:application/font-sfnt", "--delete-attachment", "mime-type:font/collection", "--delete-attachment", "mime-type:font/otf", "--delete-attachment", "mime-type:font/sfnt", "--delete-attachment", "mime-type:font/ttf"], stdout=subprocess.DEVNULL)
+        print("   Done.")
+
         #fontCollector
         #detect all ass files in folder, then copy all needed fonts
-        attachment_dir = temp_dir + "\\cum"
-        if not exists(attachment_dir):
-            os.mkdir(attachment_dir)
-        for root, dirs, files in os.walk(temp_dir):
-            for file in files:
-                if file.endswith(".ass"):
-                    print("\nFinding necessary fonts...")
-                    subprocess.call(["fontcollector", "--input", os.path.join(root, file), "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "-d"])
+        attachment_dir = temp_dir + "\\collected"
+        os.mkdir(attachment_dir)
+        if font_collector_log.lower() == "yes" or font_collector_log.lower() == "y":
+            if first_ep:
+                log_path = os.path.dirname(output_file) + "\\Fonts\\!fontcollector - " + datetime.datetime.now().strftime("%Y.%m.%d %H-%M-%S") + ".log"
+                with open(log_path, "w") as log:
+                    log.write("Episode " + ep_string + ":\n")
+            else:
+                with open(log_path, "a") as log:
+                    log.write("Episode " + ep_string + ":\n")
+            with open(log_path, "a") as log:
+                for root, dirs, files in os.walk(temp_dir):
+                    for file in files:
+                        if file.endswith(".ass"):
+                            print("\nFinding necessary fonts...")
+                            with subprocess.Popen(["fontcollector", "--input", os.path.join(root, file), "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                                for line in p.stdout:
+                                    print(line, end="")
+                                    log.write(line)
+                            log.write("\n")
+        else:
+            for root, dirs, files in os.walk(temp_dir):
+                for file in files:
+                    if file.endswith(".ass"):
+                        print("\nFinding necessary fonts...")
+                        subprocess.call(["fontcollector", "--input", os.path.join(root, file), "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir])
+        
         #mux needed fonts to ouput mkv
         print("\nMuxing necessary fonts to output file...")
         propedit_args = []
@@ -397,6 +489,7 @@ while ep_num < int(end_episode)+1:
                 propedit_args.append("--add-attachment")
                 propedit_args.append(os.path.join(root, file))
         subprocess.call([mkv_propedit_path] + [output_file] + propedit_args, stdout=subprocess.DEVNULL)
+
         #remove temp dir
         shutil.rmtree(temp_dir)
 
@@ -420,6 +513,7 @@ while ep_num < int(end_episode)+1:
 
     print('\nFinished Processing ----------------')
     ep_num += 1
+    first_ep = False
 
 print('\n\nAll files have been processed.')
 input('<press any key to exit>')
