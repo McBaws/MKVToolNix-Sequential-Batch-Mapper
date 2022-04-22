@@ -275,8 +275,6 @@ while ep_num < int(end_episode)+1:
                 else:
                     options_data_temp[i + 1] = mkvtitle
                 title_muxed = True
-            else:
-                options_data_temp[i + 1] = ""
 
         if "***" in v:
             completion_pos = []
