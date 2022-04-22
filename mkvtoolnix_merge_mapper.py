@@ -249,7 +249,10 @@ while ep_num < int(end_episode)+1:
         if v == '--output':
             full_path = options_data_temp[i + 1]
             pos = options_data_temp[i + 1].rindex("\\") + 1
-            options_data_temp[i + 1] = full_path[:pos] + out_folder + "\\" + full_path[pos:]
+            if out_folder:
+                options_data_temp[i + 1] = full_path[:pos] + out_folder + "\\" + full_path[pos:]
+            else:
+                options_data_temp[i + 1] = full_path
             
         if v == '--title':
             if titles_mux_q == True:
