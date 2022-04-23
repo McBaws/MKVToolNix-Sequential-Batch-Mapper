@@ -12,6 +12,7 @@
 
     "auto_font_q":"",
     "font_collector_log":"yes",
+    "font_match_guess":"yes",
 
     "titles_filename_q":"",
     "titles_mux_q":"",

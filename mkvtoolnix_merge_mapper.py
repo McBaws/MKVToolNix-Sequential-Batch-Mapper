@@ -6,24 +6,34 @@ import subprocess
 import zlib
 import shutil
 import datetime
+import difflib
+import platform
 
 #set up config variables
 config_filename = 'mkvconfig.json'
 
 #default config
 default_config = {
+"mkv_toolnix_path":"C:\\Program Files\\MKVToolNix",
+
+"out_folder":"mkvmerge_out",
+"ep_var_name":"EPNUM",
+
 "options_filename":"options.json",
 "titles_filename":"titles.txt",
 "mkvtitles_filename":"mkvtitles.txt",
-"ep_var_name":"EPNUM",
-"out_folder":"mkvmerge_out",
-"mkv_toolnix_path":"C:\\Program Files\\MKVToolNix",
+
 "CRC_buffer":8192,
+
 "auto_font_q":"",
 "font_collector_log":"yes",
-'titles_mux_q':"",
-'titles_filename_q':"",
-'titles_mux_ep_q':""
+"font_match_guess":"yes",
+
+"titles_filename_q":"",
+"titles_mux_q":"",
+"titles_mux_ep_q":"",
+
+"skip_mux":""
 }
 
 #checks if a config file exists
@@ -41,7 +51,8 @@ else:
     #looks up and assigns config values
 
 auto_font_q = config['auto_font_q']
-font_collector_log = config['auto_font_q']
+font_collector_log = config['font_collector_log']
+font_match_guess = config["font_match_guess"]
 
 titles_mux_q = config['titles_mux_q']
 titles_filename_q = config['titles_filename_q']
@@ -60,6 +71,8 @@ mkv_extract_path = mkv_toolnix_path + "\\mkvextract.exe"
 mkv_propedit_path = mkv_toolnix_path + "\\mkvpropedit.exe"
 mkv_info_path = mkv_toolnix_path + "\\mkvinfo.exe"
 
+skip_mux = config["skip_mux"]
+
 #checks if crucial files exist
 if not exists(mkv_merge_path):
     print('\nmkvmerge was not found at given path')
@@ -70,6 +83,21 @@ if not exists(options_filename):
     print('\noptions file was not found')
     input('<press enter>')
     quit()
+
+if font_collector_log.lower() == "yes" or font_collector_log.lower() == "y" or font_collector_log.lower() == "true":
+    font_collector_log = True
+else:
+    font_collector_log = False
+
+if font_match_guess.lower() == "yes" or font_match_guess.lower() == "y" or font_match_guess.lower() == "true":
+    font_match_guess = True
+else:
+    font_match_guess = False
+
+if skip_mux.lower() == "yes" or skip_mux.lower() == "y" or skip_mux.lower() == "true":
+    skip_mux = True
+else:
+    skip_mux = False
 
 if not auto_font_q:
     print('\nWould you like to mux fonts automatically?')
@@ -89,13 +117,14 @@ else:
         auto_font_q = False
 
 #checks if a text file containing titles exists
+mkvtitles_found = False
+titles_found = False
 if not exists(mkvtitles_filename) and not exists(titles_filename):
     print("\n\nCould not find " + titles_filename + " or " + mkvtitles_filename + ".")
     print("Will continue without including titles.")
     titles_mux_q = False
     titles_mux_ep_q = False
     titles_filename_q = False
-    titles_found = False
 if exists(titles_filename):
     with open(titles_filename) as titles:
         titles_data = [line.strip() for line in titles]
@@ -103,7 +132,7 @@ if exists(titles_filename):
 if exists(mkvtitles_filename):
     with open(mkvtitles_filename) as mkvtitles:
         mkvtitles_data = [line.strip() for line in mkvtitles]
-    titles_found = True
+    mkvtitles_found = True
 
 if titles_found:
     if not titles_filename_q:
@@ -123,7 +152,7 @@ if titles_found:
             print("\nNot adding titles to filename.")
             titles_filename_q = False
 
-
+if titles_found or mkvtitles_found:
     if not titles_mux_q:
         print('\n\nWould you like to mux titles to mkv?')
         titles_mux_q = input()
@@ -183,8 +212,9 @@ while ep_num < int(end_episode)+1:
 
     #reads titles for given episode
     if titles_filename_q == True or titles_mux_q == True:
-        title = titles_data[ep_num - 1]
-        if exists(mkvtitles_filename):
+        if titles_found:
+            title = titles_data[ep_num - 1]
+        if mkvtitles_found:
             mkvtitle = mkvtitles_data[ep_num - 1]
         else:
             mkvtitle = title
@@ -386,15 +416,10 @@ while ep_num < int(end_episode)+1:
             else:
                 options_data_temp.append(mkvtitle)
             title_muxed = True
-        if title_muxed == True:
-            print("\nMKV title was muxed successfully!")
-        else:
-            print("\nFailed to mux MKV title.")
-
-    call_arguments = [mkv_merge_path] + options_data_temp
     
     print('Starting Episode (' + str(ep_num) + '/' + str(int(end_episode)) + ') ---------------')
-    subprocess.call(call_arguments)
+    if not skip_mux:
+        subprocess.call([mkv_merge_path] + options_data_temp)
 
     if auto_font_q:
         print("\nAutomatically muxing required fonts...")
@@ -440,8 +465,9 @@ while ep_num < int(end_episode)+1:
             extract_args.append(str(aid[i][0]) + ":" + temp_dir + "\\" + aid[i][1])
         subprocess.call([mkv_extract_path] + [output_file] + extract_args, stdout=subprocess.DEVNULL)
         print("   Done.")
+
         if font_collector_log:
-            print("\nCopying extracted fonts to folder...", end="")
+            print("Copying extracted fonts to folder...", end="")
             extract_args = ["attachments"]
             for i in range(0, len(aid)):
                 extract_args.append(str(aid[i][0]) + ":" + os.path.dirname(output_file) + "\\Fonts\\" + aid[i][1])
@@ -456,8 +482,21 @@ while ep_num < int(end_episode)+1:
         #fontCollector
         #detect all ass files in folder, then copy all needed fonts
         attachment_dir = temp_dir + "\\collected"
+        log_font_dir = temp_dir + "\\log"
         os.mkdir(attachment_dir)
-        if font_collector_log.lower() == "yes" or font_collector_log.lower() == "y":
+        os.mkdir(log_font_dir)
+        fontcollector_args = []
+        print("\nFinding necessary fonts...")
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                if file.endswith(".ass"):
+                    fontcollector_args.append(os.path.join(root, file))
+        subprocess.call(["fontcollector", "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args)
+
+        #do the same but log
+        cur_ep_font_log = []
+        if font_collector_log:
+            print("\nLogging...")
             if first_ep:
                 log_path = os.path.dirname(output_file) + "\\Fonts\\!fontcollector - " + datetime.datetime.now().strftime("%Y.%m.%d %H-%M-%S") + ".log"
                 with open(log_path, "w") as log:
@@ -465,28 +504,134 @@ while ep_num < int(end_episode)+1:
             else:
                 with open(log_path, "a") as log:
                     log.write("Episode " + ep_string + ":\n")
+            
             with open(log_path, "a") as log:
-                for root, dirs, files in os.walk(temp_dir):
+                with subprocess.Popen(["fontcollector", "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                    for line in p.stdout:
+                        log.write(line)
+                        cur_ep_font_log.append(line)
+                log.write("\n")
+        elif font_match_guess:
+            with subprocess.Popen(["fontcollector", "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                for line in p.stdout:
+                    cur_ep_font_log.append(line)
+
+        #detect fonts that weren't found by fontcollector
+        if font_match_guess:
+            print("\nDetecting fonts that weren't found by fontcollector...")
+            if font_collector_log:
+                with open(log_path, "a") as log:
+                    log.write("Detecting fonts that weren't found by fontcollector...")
+            bad_fonts = []
+            for i, v in enumerate(cur_ep_font_log):
+                if v == "Error: Some fonts were not found. Are they installed? :\n":
+                    for x in cur_ep_font_log[i+1:]:
+                        if x[:-1] != "":
+                            bad_fonts.append(x[:-1])
+
+            #copy fonts that are in temp_dir and have similar names to fonts fontcollector couldn't find
+            matches = []
+            bad_font_num = 0
+            fixed_fonts = []
+            if font_collector_log:
+                search_dir = os.path.dirname(output_file) + "\\Fonts"
+            else:
+                search_dir = os.path.dirname(output_file) + temp_dir
+            for root, dirs, files in os.walk(search_dir):
+                for bad_font_o in bad_fonts:
+                    matches.append([])
                     for file in files:
-                        if file.endswith(".ass"):
-                            print("\nFinding necessary fonts...")
-                            with subprocess.Popen(["fontcollector", "--input", os.path.join(root, file), "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
-                                for line in p.stdout:
-                                    print(line, end="")
-                                    log.write(line)
-                            log.write("\n")
-        else:
-            for root, dirs, files in os.walk(temp_dir):
-                for file in files:
-                    if file.endswith(".ass"):
-                        print("\nFinding necessary fonts...")
-                        subprocess.call(["fontcollector", "--input", os.path.join(root, file), "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir])
-        
+                        filename = os.path.splitext(file)[0]
+                        bad_font = bad_font_o.replace(" ", "").replace("-", "").replace("_", "").lower()
+                        filename = filename.replace(" ", "").replace("-", "").replace("_", "").lower()
+                        if difflib.SequenceMatcher(None, filename, bad_font).ratio() > 0.5:
+                            matches[bad_font_num].append([difflib.SequenceMatcher(None, filename, bad_font).ratio(), file])
+                    if sorted(matches[bad_font_num]):
+                        shutil.copy2(os.path.join(root, file), attachment_dir + "\\" + sorted(matches[bad_font_num])[-1][1])
+                        print("MATCHED: '" + bad_font_o + "' with '" + sorted(matches[bad_font_num])[-1][1] + "'")
+                        if font_collector_log:
+                            with open(log_path, "a") as log:
+                                log.write("\nMATCHED: '" + bad_font_o + "' with '" + sorted(matches[bad_font_num])[-1][1] + "'")
+                        fixed_fonts.append(bad_font_o)
+                    bad_font_num += 1
+
+            for bad_font in fixed_fonts:
+                bad_fonts.remove(bad_font)
+            fixed_fonts = []
+
+            if len(bad_fonts) > 0:
+                matches = []
+                bad_font_num = 0
+                if platform.system() == "Windows":
+                    for root, dirs, files in os.walk(os.path.join(os.environ['SystemRoot'], "Fonts")):
+                        for bad_font_o in bad_fonts:
+                            matches.append([])
+                            for file in files:
+                                filename = os.path.splitext(file)[0]
+                                bad_font = bad_font_o.replace(" ", "").replace("-", "").replace("_", "").lower()
+                                filename = filename.replace(" ", "").replace("-", "").replace("_", "").lower()
+                                if difflib.SequenceMatcher(None, filename, bad_font).ratio() > 0.5:
+                                    matches[bad_font_num].append([difflib.SequenceMatcher(None, filename, bad_font).ratio(), file])
+                            if sorted(matches[bad_font_num]):
+                                shutil.copy2(os.path.join(root, file), attachment_dir + "\\" + sorted(matches[bad_font_num])[-1][1])
+                                print("OS MATCHED: '" + bad_font_o + "' with '" + sorted(matches[bad_font_num])[-1][1] + "'")
+                                if font_collector_log:
+                                    with open(log_path, "a") as log:
+                                        log.write("\nOS MATCHED: '" + bad_font_o + "' with '" + sorted(matches[bad_font_num])[-1][1] + "'")
+                                fixed_fonts.append(bad_font_o)
+                            bad_font_num += 1
+                
+            for bad_font in fixed_fonts:
+                bad_fonts.remove(bad_font)
+            fixed_fonts = []
+
+            if len(bad_fonts) > 0:
+                matches = []
+                bad_font_num = 0
+                if platform.system() == "Windows":
+                    for root, dirs, files in os.walk(os.path.join(os.environ['LOCALAPPDATA'], "Microsoft\\Windows\\Fonts")):
+                        for bad_font_o in bad_fonts:
+                            matches.append([])
+                            for file in files:
+                                filename = os.path.splitext(file)[0]
+                                bad_font = bad_font_o.replace(" ", "").replace("-", "").replace("_", "").lower()
+                                filename = filename.replace(" ", "").replace("-", "").replace("_", "").lower()
+                                if difflib.SequenceMatcher(None, filename, bad_font).ratio() > 0.5:
+                                    matches[bad_font_num].append([difflib.SequenceMatcher(None, filename, bad_font).ratio(), file])
+                            if sorted(matches[bad_font_num]):
+                                shutil.copy2(os.path.join(root, file), attachment_dir + "\\" + sorted(matches[bad_font_num])[-1][1])
+                                print("OS MATCHED: '" + bad_font_o + "' with '" + sorted(matches[bad_font_num])[-1][1] + "'")
+                                if font_collector_log:
+                                    with open(log_path, "a") as log:
+                                        log.write("\nOS MATCHED: '" + bad_font_o + "' with '" + sorted(matches[bad_font_num])[-1][1] + "'")
+                                fixed_fonts.append(bad_font_o)
+                            bad_font_num += 1
+
+            for bad_font in fixed_fonts:
+                bad_fonts.remove(bad_font)
+
+            if len(bad_fonts) == 1:
+                print("\n1 font not matched:\n" + bad_fonts[0])
+                if font_collector_log:
+                    with open(log_path, "a") as log:
+                        log.write("\n1 font not matched:\n" + bad_fonts[0])
+
+            elif len(bad_fonts) > 1:
+                print("\n" + str(len(bad_fonts)) + " fonts not matched:")
+                for bad_font in bad_fonts:
+                    print(bad_font)
+                if font_collector_log:
+                    with open(log_path, "a") as log:
+                        log.write("\n" + str(len(bad_fonts)) + " fonts not matched:")
+                        for bad_font in bad_fonts:
+                            log.write(bad_font)
+
         #mux needed fonts to ouput mkv
-        print("\nMuxing necessary fonts to output file...")
+        print("\nMuxing necessary fonts to output file:")
         propedit_args = []
         for root, dirs, files in os.walk(attachment_dir):
             for file in files:
+                print(file)
                 propedit_args.append("--add-attachment")
                 propedit_args.append(os.path.join(root, file))
         subprocess.call([mkv_propedit_path] + [output_file] + propedit_args, stdout=subprocess.DEVNULL)

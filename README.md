@@ -71,6 +71,8 @@ This feature requires [FontCollector](https://github.com/moi15moi/FontCollector)
 
     - I have introduced a feature where a log of FontCollector's activity is generated in the output directory, and all fonts from input mkvs will be copied to a `Fonts` folder. This should make it easier to spot and fix errors. It can be toggled in `mkvconfig.json`.
 
+    - Additionally, I have also introduced a feature where the script will attempt to guess the right font based on the filename. It is on by default and can be toggled in `mkvconfig.json`.
+
     - I recommend using [FontValidator](https://github.com/TypesettingTools/Myaamori-Aegisub-Scripts#font-validator) to check for missing fonts.
 
 ## Autocomplete filepath
