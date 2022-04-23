@@ -518,16 +518,17 @@ while ep_num < int(end_episode)+1:
 
         #detect fonts that weren't found by fontcollector
         if font_match_guess:
-            print("\nDetecting fonts that weren't found by fontcollector...")
-            if font_collector_log:
-                with open(log_path, "a") as log:
-                    log.write("Detecting fonts that weren't found by fontcollector...")
             bad_fonts = []
             for i, v in enumerate(cur_ep_font_log):
                 if v == "Error: Some fonts were not found. Are they installed? :\n":
                     for x in cur_ep_font_log[i+1:]:
                         if x[:-1] != "":
                             bad_fonts.append(x[:-1])
+            if bad_fonts:
+                print("\nDetecting fonts that weren't found by fontcollector...")
+                if font_collector_log:
+                    with open(log_path, "a") as log:
+                        log.write("Detecting fonts that weren't found by fontcollector...")
 
             #copy fonts that are in temp_dir and have similar names to fonts fontcollector couldn't find
             matches = []
