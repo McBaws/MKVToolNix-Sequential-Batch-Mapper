@@ -23,7 +23,7 @@
 
 2. Make sure all your MKV files have the same name apart from the episode numbers. 
 
-    - Note: this is no longer necessary and can be bypassed by using [filepath autocompletion](#autocomplete-filepath).
+    - Note: this can now be bypassed by using [filepath autocompletion](#autocomplete-filepath).
 
 3. Open `mkvtoolnix-gui.exe`.
 
@@ -60,7 +60,7 @@
 ## Automatic font muxing
 The script will automatically detect the fonts needed in included .ass files, and will mux them into the output file. This feature also removes any unneeded fonts that may have been included in the input mkv files.
 
-This feature requires [FontCollector](https://github.com/moi15moi/FontCollector) to be installed, and included in the path variable.
+This feature requires [FontCollector](https://github.com/moi15moi/FontCollector) to be installed.
 
 - Simply run `mkvtoolnix_merge_mapper.py`, and when prompted on whether you want to automatically mux fonts, input `yes` or `y`.
     - This preference can also be set in the `mkvconfig.json` file
