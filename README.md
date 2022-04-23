@@ -58,7 +58,7 @@
 12. When prompted, enter the range of episode numbers you want to mux. Your files will be sequentially muxed into the set output directory (`mkvmerge_out` by default).
 
 ## Automatic font muxing
-The script will automatically detect the fonts needed in included .ass files, and will mux them into the output file. This feature also removes any unneeded fonts that may have been included in the input mkv files.
+The script will automatically detect the fonts needed in included .ass files and will mux them into the output file. This feature also removes any unneeded fonts that may have been included in the input mkv files.
 
 This feature requires [FontCollector](https://github.com/moi15moi/FontCollector) to be installed.
 
@@ -77,9 +77,9 @@ This feature requires [FontCollector](https://github.com/moi15moi/FontCollector)
 
 ## Autocomplete filepath
 
-The script will autocomplete the paths of specified files. Useful if the filenames you want to use have a CRC or episode name in them, which means they won't match the rule in your options file. (For example if the releases you want to remux have filenames like `Show - 01 - dumb title.mkv`, `Show - 02 - different title.mkv`, the rule `Show - EPNUM.mkv` won't work.)
+The script will autocomplete the paths of specified files. Useful if the filenames you want to use have a CRC or episode name in them, which means they won't match the rule in your options file. (For example, if the releases you want to remux have filenames like `Show - 01 - dumb title.mkv`, `Show - 02 - different title.mkv`, the rule `Show - EPNUM.mkv` won't work.)
 
-- Put three stars (`***`) wherever you want the script to autocomplete the filename. Using the example above, the rule `Show - EPNUM - ***` would matchh both of those filenames. This can also be used in folder names.
+- Put three stars (`***`) wherever you want the script to autocomplete the filename. Using the example above, the rule `Show - EPNUM - ***` would match both of those filenames. This can also be used in folder names.
 - Put two stars (`**`) if you want to specify an extension for the file. For example, let's say you have both `Show - 01 - dumb title.mkv` and `Show - 01 - dumb title.ass` in the same directory. In this case the rule `Show - EPNUM - **.mkv` would match the first file and `Show - EPNUM - **.ass` would match the second.
 - As long as your rule gives enough information to single out one file, it will be accepted.
 
