@@ -500,10 +500,10 @@ while ep_num < int(end_episode)+1:
             if first_ep:
                 log_path = os.path.dirname(output_file) + "\\Fonts\\!fontcollector - " + datetime.datetime.now().strftime("%Y.%m.%d %H-%M-%S") + ".log"
                 with open(log_path, "w") as log:
-                    log.write("Episode " + ep_string + ":\n")
+                    log.write("\nEpisode " + ep_string + ":\n")
             else:
                 with open(log_path, "a") as log:
-                    log.write("Episode " + ep_string + ":\n")
+                    log.write("\nEpisode " + ep_string + ":\n")
             
             with open(log_path, "a") as log:
                 with subprocess.Popen(["fontcollector", "-o", attachment_dir, "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
