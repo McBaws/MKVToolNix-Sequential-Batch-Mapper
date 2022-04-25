@@ -67,13 +67,9 @@ This feature requires [FontCollector](https://github.com/moi15moi/FontCollector)
 
 - The script will only be able to mux fonts that are installed or that are in one of the input mkv files.
 
-- FontCollector currently has an issue where it can't decode certain font names. As such, the script may fail to mux some fonts. 
+- I have introduced a feature where a log of FontCollector's activity is generated in the output directory, and all fonts from input mkvs will be copied to a `Fonts` folder. This should make it easier to spot and fix errors. It can be enabled in `mkvconfig.json`.
 
-    - I have introduced a feature where a log of FontCollector's activity is generated in the output directory, and all fonts from input mkvs will be copied to a `Fonts` folder. This should make it easier to spot and fix errors. It can be toggled in `mkvconfig.json`.
-
-    - Additionally, I have also introduced a feature where the script will attempt to guess the right font based on the filename. It is on by default and can be toggled in `mkvconfig.json`.
-
-    - I recommend using [FontValidator](https://github.com/TypesettingTools/Myaamori-Aegisub-Scripts#font-validator) to check for missing fonts.
+- **FontCollector is not perfect. Always QC your files!**
 
 ## Autocomplete filepath
 

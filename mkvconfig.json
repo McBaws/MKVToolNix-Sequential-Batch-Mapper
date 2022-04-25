@@ -10,11 +10,10 @@
     
     "CRC_buffer":8192,
 
-    "auto_font_q":"",
-    "font_collector_log":"yes",
-    "font_match_guess":"yes",
+    "auto_font_mux":"",
+    "font_collector_log":"no",
 
-    "titles_filename_q":"",
-    "titles_mux_q":"",
-    "titles_mux_ep_q":""
+    "titles_in_filenames":"",
+    "titles_in_mkv":"",
+    "episode_number_in_mkv":""
     }
