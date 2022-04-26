@@ -32,7 +32,8 @@ default_config = {
 "titles_in_mkv":"",
 "episode_number_in_mkv":"",
 
-"skip_mux":""
+"skip_mux":"",
+"skip_episodes":[]
 }
 
 #checks if a config file exists
@@ -70,6 +71,7 @@ mkv_propedit_path = mkv_toolnix_path + "\\mkvpropedit.exe"
 mkv_info_path = mkv_toolnix_path + "\\mkvinfo.exe"
 
 skip_mux = config["skip_mux"]
+skip_episodes = config["skip_episodes"]
 
 #checks if crucial files exist
 if not exists(mkv_merge_path):
@@ -202,6 +204,11 @@ first_ep = True
 while ep_num < int(end_episode)+1:
     options_data_temp = []
     options_data_temp += options_data
+
+    if skip_episodes:
+        if ep_num in skip_episodes:
+            ep_num += 1
+            continue
 
     #reads titles for given episode
     if titles_filename_q == True or titles_mux_q == True:
