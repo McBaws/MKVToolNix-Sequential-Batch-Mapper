@@ -8,6 +8,7 @@ import shutil
 import datetime
 import difflib
 import platform
+import re
 
 #set up config variables
 config_filename = 'mkvconfig.json'
@@ -231,7 +232,26 @@ while ep_num < int(end_episode)+1:
         for i, v in enumerate(options_data_temp):
             if options_data_temp[i - 1] == '--output':
                 full_path = v
-                if ep_var_name + "MOD(" in v:
+
+                #how a version number (v2, v3) affects title placement
+                ver_calc = False
+                #regex to find ver num
+                for m in re.finditer("v\d{1,}", v):
+                    ver_start = m.start()
+                    ver_end = m.end()
+                    #check if ver num comes after episode number, but not more than 2 indexes after episode number
+                    if ver_start > v.rindex(ep_var_name):
+                        if ep_var_name + "MOD(" in v:
+                            if ver_start - v.find(")", v.rindex(ep_var_name + "MOD(")) < 3:
+                                ver_calc = True
+                                break
+                        elif ver_start - (v.rindex(ep_var_name)+len(ep_var_name)) < 3:
+                            ver_calc = True
+                            break
+
+                if ver_calc:
+                    options_data_temp[i] = full_path[:ver_end] + " - " + title + full_path[ver_end:]
+                elif ep_var_name + "MOD(" in v:
                     if v.rindex(ep_var_name + "MOD(") != v.index(ep_var_name + "MOD("):
                         ep_num_pos = v.rindex(ep_var_name + "MOD(")
                         c_brack_pos = v.find(")", ep_num_pos) + 1
@@ -506,7 +526,7 @@ while ep_num < int(end_episode)+1:
         #remove temp dir
         shutil.rmtree(temp_dir)
 
-    if CRC_calc:
+    if CRC_calc and exists(output_file):
         print("\n\nCRC is being calculated. This may take a while.")
         with open(output_file, 'rb') as f:
             crc = 0
