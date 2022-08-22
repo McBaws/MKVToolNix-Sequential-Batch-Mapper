@@ -451,7 +451,7 @@ while ep_num < int(end_episode)+1:
             shutil.rmtree(temp_dir)
         mkvinfo_output_file = temp_dir + "\\mkvinfo.txt"
         subprocess.call([mkv_info_path] + [output_file] + ["--redirect-output"] + [mkvinfo_output_file], stdout=subprocess.DEVNULL)
-        with open(mkvinfo_output_file) as mkvinfo:
+        with open(mkvinfo_output_file, encoding='utf-8', errors='ignore') as mkvinfo:
             mkvinfo_data = [line.strip() for line in mkvinfo]
 
         #get track ids of all ass files
