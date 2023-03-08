@@ -3,19 +3,23 @@
 
     "out_folder":"mkvmerge_out",
     "ep_var_name":"EPNUM",
+    "title_var_name":"EPTITLE",
+    "mkvtitle_var_name":"MKVTITLE",
+    "crc_var_name":"CRC",
 
     "options_filename":"options.json",
     "titles_filename":"titles.txt",
     "mkvtitles_filename":"mkvtitles.txt",
-    
-    "CRC_buffer":8192,
 
     "auto_font_mux":"",
     "font_collector_log":"no",
 
-    "titles_in_filenames":"",
+    "titles_in_filename":"",
     "titles_in_mkv":"",
-    "episode_number_in_mkv":"",
+    "title_separator":" - ",
 
-    "skip_episodes":[]
-    }
+    "skip_mux":"",
+    "skip_episodes":[],
+
+    "CRC_buffer":8192
+}

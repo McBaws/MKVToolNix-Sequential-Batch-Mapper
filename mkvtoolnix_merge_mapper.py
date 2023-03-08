@@ -6,8 +6,6 @@ import subprocess
 import zlib
 import shutil
 import datetime
-import difflib
-import platform
 import re
 
 #set up config variables
@@ -19,22 +17,25 @@ default_config = {
 
 "out_folder":"mkvmerge_out",
 "ep_var_name":"EPNUM",
+"title_var_name":"EPTITLE",
+"mkvtitle_var_name":"MKVTITLE",
+"crc_var_name":"CRC",
 
 "options_filename":"options.json",
 "titles_filename":"titles.txt",
 "mkvtitles_filename":"mkvtitles.txt",
 
-"CRC_buffer":8192,
-
 "auto_font_mux":"",
-"font_collector_log":"yes",
+"font_collector_log":"no",
 
-"titles_in_filenames":"",
+"titles_in_filename":"",
 "titles_in_mkv":"",
-"episode_number_in_mkv":"",
+"title_separator":" - ",
 
 "skip_mux":"",
-"skip_episodes":[]
+"skip_episodes":[],
+
+"CRC_buffer":8192
 }
 
 #checks if a config file exists
@@ -51,28 +52,33 @@ else:
     config = dict(default_config)
     #looks up and assigns config values
 
-auto_font_q = config['auto_font_mux']
-font_collector_log = config['font_collector_log']
+mkv_toolnix_path = config['mkv_toolnix_path']
+mkv_merge_path = os.path.join(mkv_toolnix_path, "mkvmerge.exe")
+mkv_extract_path = os.path.join(mkv_toolnix_path, "mkvextract.exe")
+mkv_propedit_path = os.path.join(mkv_toolnix_path, "mkvpropedit.exe")
+mkv_info_path = os.path.join(mkv_toolnix_path, "mkvinfo.exe")
 
-titles_mux_q = config['titles_in_mkv']
-titles_filename_q = config['titles_in_filenames']
-titles_mux_ep_q = config['episode_number_in_mkv']
+out_folder = config['out_folder']
+ep_var_name = config['ep_var_name']
+title_var_name = config['title_var_name']
+mkvtitle_var_name = config['mkvtitle_var_name']
+crc_var_name = config['crc_var_name']
 
 options_filename = config['options_filename']
 titles_filename = config['titles_filename']
 mkvtitles_filename = config['mkvtitles_filename']
-ep_var_name = config['ep_var_name']
-out_folder = config['out_folder']
-CRC_buffer = config["CRC_buffer"]
 
-mkv_toolnix_path = config['mkv_toolnix_path']
-mkv_merge_path = mkv_toolnix_path + "\\mkvmerge.exe"
-mkv_extract_path = mkv_toolnix_path + "\\mkvextract.exe"
-mkv_propedit_path = mkv_toolnix_path + "\\mkvpropedit.exe"
-mkv_info_path = mkv_toolnix_path + "\\mkvinfo.exe"
+auto_font_q = config['auto_font_mux']
+font_collector_log = config['font_collector_log']
+
+titles_filename_q = config['titles_in_filename']
+titles_mux_q = config['titles_in_mkv']
+title_separator = config['title_separator']
 
 skip_mux = config["skip_mux"]
 skip_episodes = config["skip_episodes"]
+
+CRC_buffer = config["CRC_buffer"]
 
 #checks if crucial files exist
 if not exists(mkv_merge_path):
@@ -119,7 +125,6 @@ if not exists(mkvtitles_filename) and not exists(titles_filename):
     print("\n\nCould not find " + titles_filename + " or " + mkvtitles_filename + ".")
     print("Will continue without including titles.")
     titles_mux_q = False
-    titles_mux_ep_q = False
     titles_filename_q = False
 if exists(titles_filename):
     with open(titles_filename) as titles:
@@ -130,7 +135,8 @@ if exists(mkvtitles_filename):
         mkvtitles_data = [line.strip() for line in mkvtitles]
     mkvtitles_found = True
 
-if titles_found:
+#asks whether user wants to include titles
+if titles_found or mkvtitles_found:
     if not titles_filename_q:
         print('\n\nWould you like to add titles to filename?')
         titles_filename_q = input()
@@ -148,7 +154,6 @@ if titles_found:
             print("\nNot adding titles to filename.")
             titles_filename_q = False
 
-if titles_found or mkvtitles_found:
     if not titles_mux_q:
         print('\n\nWould you like to mux titles to mkv?')
         titles_mux_q = input()
@@ -165,24 +170,6 @@ if titles_found or mkvtitles_found:
         else:
             print("\nNot muxing titles to mkv.")
             titles_mux_q = False
-
-    if titles_mux_q == True:
-        if not titles_mux_ep_q:
-            print('\n\nWould you like to add episode number to mkv title?')
-            titles_mux_ep_q = input()
-            if titles_mux_ep_q.lower() == "yes" or titles_mux_ep_q.lower() == "y":
-                print("I'll take that as a yes.")
-                titles_mux_ep_q = True
-            else:
-                print("I'll take that as a no.")
-                titles_mux_ep_q = False
-        else:
-            if titles_mux_ep_q.lower() == "yes" or titles_mux_ep_q.lower() == "y":
-                print("\nAdding episode number to mkv title.")
-                titles_mux_ep_q = True
-            else:
-                print("\nNot adding episode number to mkv title.")
-                titles_mux_ep_q = False
 
 
 
@@ -213,12 +200,15 @@ while ep_num < int(end_episode)+1:
 
     #reads titles for given episode
     if titles_filename_q == True or titles_mux_q == True:
-        if titles_found:
+        if titles_found and mkvtitles_found:
             title = titles_data[ep_num - 1]
-        if mkvtitles_found:
             mkvtitle = mkvtitles_data[ep_num - 1]
-        else:
-            mkvtitle = title
+        elif titles_found:
+            title = titles_data[ep_num - 1]
+            mkvtitle = titles_data[ep_num - 1]
+        elif mkvtitles_found:
+            title = mkvtitles_data[ep_num - 1]
+            mkvtitle = mkvtitles_data[ep_num - 1]
         title_muxed = False
 
     #appends a 0 to numbers under 10
@@ -227,10 +217,11 @@ while ep_num < int(end_episode)+1:
     else:
         ep_string = str(ep_num)
 
-    #searches for episode variable and places the title after its last occurence
+
+    #if title variable isn't present, searches for episode variable and places the title after its last occurence
     if titles_filename_q == True:
         for i, v in enumerate(options_data_temp):
-            if options_data_temp[i - 1] == '--output':
+            if options_data_temp[i - 1] == '--output' and title_var_name not in v and mkvtitle_var_name not in v:
                 full_path = v
 
                 #how a version number (v2, v3) affects title placement
@@ -249,38 +240,41 @@ while ep_num < int(end_episode)+1:
                             ver_calc = True
                             break
 
+                #place title
                 if ver_calc:
-                    options_data_temp[i] = full_path[:ver_end] + " - " + title + full_path[ver_end:]
+                    options_data_temp[i] = full_path[:ver_end] + title_separator + title + full_path[ver_end:]
                 elif ep_var_name + "MOD(" in v:
                     if v.rindex(ep_var_name + "MOD(") != v.index(ep_var_name + "MOD("):
                         ep_num_pos = v.rindex(ep_var_name + "MOD(")
                         c_brack_pos = v.find(")", ep_num_pos) + 1
-                        options_data_temp[i] = full_path[:c_brack_pos] + " - " + title + full_path[c_brack_pos:]
+                        options_data_temp[i] = full_path[:c_brack_pos] + title_separator + title + full_path[c_brack_pos:]
                     elif v.rindex(ep_var_name) != v.index(ep_var_name + "MOD("):
                         title_pos = v.rindex(ep_var_name) + len(ep_var_name)
-                        options_data_temp[i] = full_path[:title_pos] + " - " + title + full_path[title_pos:]
+                        options_data_temp[i] = full_path[:title_pos] + title_separator + title + full_path[title_pos:]
                     else:
                         ep_num_pos = v.index(ep_var_name + "MOD(")
                         c_brack_pos = v.find(")", ep_num_pos) + 1
-                        options_data_temp[i] = full_path[:c_brack_pos] + " - " + title + full_path[c_brack_pos:]
+                        options_data_temp[i] = full_path[:c_brack_pos] + title_separator + title + full_path[c_brack_pos:]
                 elif ep_var_name in v:
                     if v.rindex(ep_var_name) != v.index(ep_var_name):
                         title_pos = v.rindex(ep_var_name) + len(ep_var_name)
-                        options_data_temp[i] = full_path[:title_pos] + " - " + title + full_path[title_pos:]
+                        options_data_temp[i] = full_path[:title_pos] + title_separator + title + full_path[title_pos:]
                     else:
                         title_pos = v.index(ep_var_name) + len(ep_var_name)
-                        options_data_temp[i] = full_path[:title_pos] + " - " + title + full_path[title_pos:]
+                        options_data_temp[i] = full_path[:title_pos] + title_separator + title + full_path[title_pos:]
+
 
     for i, v in enumerate(options_data_temp):
 
         #replaces episode variable with modified episode number
-        if ep_var_name + "MOD(" in v:
-            ep_num_pos = v.index(ep_var_name + "MOD(")
+        while ep_var_name + "MOD(" in options_data_temp[i]:
+            #finds ep var + mod() in order to get modifier in brackets
+            ep_num_pos = options_data_temp[i].index(ep_var_name + "MOD(")
             o_brack_pos = ep_num_pos + len(ep_var_name) + 3
-            c_brack_pos = v.find(")", ep_num_pos)
-            entire_ep_var = v[ep_num_pos:c_brack_pos+1]
+            c_brack_pos = options_data_temp[i].find(")", ep_num_pos)
+            entire_ep_var = options_data_temp[i][ep_num_pos:c_brack_pos+1]
             try:
-                modder = int(v[o_brack_pos+1:c_brack_pos])
+                modder = int(options_data_temp[i][o_brack_pos+1:c_brack_pos])
             except:
                 print("make sure episode number modifier is a number")
             new_ep_num = ep_num + modder
@@ -290,43 +284,45 @@ while ep_num < int(end_episode)+1:
                 new_ep_string = "0" + str(new_ep_num)
             else:
                 new_ep_string = str(new_ep_num)
-            options_data_temp[i] = options_data_temp[i].replace(entire_ep_var, new_ep_string, 1)
+            options_data_temp[i] = options_data_temp[i].replace(entire_ep_var, new_ep_string)
 
         #replaces episode variable with episode number
-        if v.find(ep_var_name):
-            options_data_temp[i] = options_data_temp[i].replace(ep_var_name, ep_string, 1)
+        if ep_var_name in v:
+            options_data_temp[i] = options_data_temp[i].replace(ep_var_name, ep_string)
 
+        #create output folder and redirect output to it
         if v == '--output':
             full_path = options_data_temp[i + 1]
             pos = options_data_temp[i + 1].rindex("\\") + 1
             if out_folder:
-                options_data_temp[i + 1] = full_path[:pos] + out_folder + "\\" + full_path[pos:]
+                options_data_temp[i + 1] = os.path.join(full_path[:pos], out_folder, full_path[pos:])
             else:
                 options_data_temp[i + 1] = full_path
             
-        if v == '--title':
+        #replaces title variable with title
+        if title_var_name in v or mkvtitle_var_name in v:
+            if titles_filename_q and not options_data_temp[i - 1] == '--title':
+                options_data_temp[i] = options_data_temp[i].replace(title_var_name, title)
+                options_data_temp[i] = options_data_temp[i].replace(mkvtitle_var_name, mkvtitle)
+
+        #if --title is in options file, mux mkvtitle. if mkvtitle_name_var is in title, replace it. otherwise the whole title is replaced.
+        var_found = False
+        if options_data_temp[i - 1] == '--title':
             if titles_mux_q == True:
-                if titles_mux_ep_q == True:
-                    if "MOD(" in options_data_temp[i + 1]:
-                        ep_num_pos = options_data_temp[i + 1].index("MOD(")
-                        o_brack_pos = ep_num_pos + 3
-                        c_brack_pos = options_data_temp[i + 1].find(")", ep_num_pos)
-                        try:
-                            modder = int(options_data_temp[i + 1][o_brack_pos+1:c_brack_pos])
-                        except:
-                            print("make sure mktitle episode number modifier is a number")
-                        new_ep_num = ep_num + modder
-                        if new_ep_num < 0:
-                            raise Exception("mkvtitle episode number modifier returns negative number")
-                        if new_ep_num < 10:
-                            new_ep_string = "0" + str(new_ep_num)
-                        else:
-                            new_ep_string = str(new_ep_num)
-                        options_data_temp[i + 1] = "Episode " + new_ep_string + ": " + mkvtitle
+                if mkvtitle_var_name in v:
+                    options_data_temp[i] = options_data_temp[i].replace(mkvtitle_var_name, mkvtitle)
+                    var_found = True
+                if title_var_name in v:
+                    if titles_found:
+                        options_data_temp[i] = options_data_temp[i].replace(title_var_name, title)
                     else:
-                        options_data_temp[i + 1] = "Episode " + ep_string + ": " + mkvtitle
-                else:
-                    options_data_temp[i + 1] = mkvtitle
+                        options_data_temp[i] = options_data_temp[i].replace(title_var_name, mkvtitle)
+                    var_found = True
+                if not var_found:
+                    options_data_temp[i] = mkvtitle
+                title_muxed = True
+            else:
+                options_data_temp[i] = ""
                 title_muxed = True
 
         if "***" in v:
@@ -400,43 +396,49 @@ while ep_num < int(end_episode)+1:
             #replace options data with matched filename
             options_data_temp[i] = completion_path
 
-    #check if CRC in output filename
+    #check if CRC in output filename, get final output filepath
     for i, v in enumerate(options_data_temp):
         if v == '--output':
-            if "CRC" in options_data_temp[i + 1]:
+            if crc_var_name in options_data_temp[i + 1]:
                 CRC_calc = True
             else:
                 CRC_calc = False
             output_file = options_data_temp[i + 1]
 
-    #add all attachments in folder 
-    for i, v in enumerate(options_data_temp):  
-        if v == "inode/directory":
-            attachment_dir = options_data_temp[i+2]
-            for root, dirs, files in os.walk(attachment_dir):
-                for file in files:
-                    options_data_temp.append("--attach-file")
-                    options_data_temp.append(os.path.join(root, file))
+    #add all attachments in folder
+    placeholder_exists = True
+    while placeholder_exists:
+        for i, v in enumerate(options_data_temp):  
+            if v == "batch/attachment":
+                attachment_dir = os.path.dirname(options_data_temp[i+2])
+                for root, dirs, files in os.walk(attachment_dir):
+                    for file in files:
+                        options_data_temp.append("--attach-file")
+                        options_data_temp.append(os.path.join(root, file))
 
-    #remove folder attachments
-    for i, v in reversed(list(enumerate(options_data_temp))):  
-        if v == "inode/directory":
-            options_data_temp.pop(i+2)
-            options_data_temp.pop(i+1)
-            options_data_temp.pop(i)
-            options_data_temp.pop(i-1)
-            options_data_temp.pop(i-2)
-            options_data_temp.pop(i-3)
+                #remove placeholder attachment
+                del(options_data_temp[i+2])
+                del(options_data_temp[i+1])
+                del(options_data_temp[i])
+                del(options_data_temp[i-1])
+                del(options_data_temp[i-2])
+                del(options_data_temp[i-3])
+                break
 
+        if "batch/attachment" not in options_data_temp:
+            placeholder_exists = False
+
+
+    #muxes mkvtitle if --title is NOT in options file
     if titles_mux_q == True:
         if title_muxed == False:
             options_data_temp.append('--title')
-            if titles_mux_ep_q == True:
-                options_data_temp.append("Episode " + str(ep_num) + ": " + mkvtitle)
-            else:
-                options_data_temp.append(mkvtitle)
+            options_data_temp.append(mkvtitle)
             title_muxed = True
     
+    print(options_data_temp)
+
+    #call mkvmerge
     print('Starting Episode (' + str(ep_num) + '/' + str(int(end_episode)) + ') ---------------')
     if not skip_mux:
         subprocess.call([mkv_merge_path] + options_data_temp)
@@ -446,10 +448,10 @@ while ep_num < int(end_episode)+1:
 
         print("Extracting subtitle files...")
         #output mkvinfo for output file to a temp directory, then read it
-        temp_dir = os.path.dirname(output_file) + "\\temp"
+        temp_dir = os.path.join(os.path.dirname(output_file), "temp")
         if exists(temp_dir):
             shutil.rmtree(temp_dir)
-        mkvinfo_output_file = temp_dir + "\\mkvinfo.txt"
+        mkvinfo_output_file = os.path.join(temp_dir, "mkvinfo.txt")
         subprocess.call([mkv_info_path] + [output_file] + ["--redirect-output"] + [mkvinfo_output_file], stdout=subprocess.DEVNULL)
         with open(mkvinfo_output_file, encoding='utf-8', errors='ignore') as mkvinfo:
             mkvinfo_data = [line.strip() for line in mkvinfo]
@@ -466,7 +468,7 @@ while ep_num < int(end_episode)+1:
         #extract all subtitle files from output mkv
         extract_args = ["tracks"]
         for i in range(0, len(trackid)):
-            extract_args.append(str(trackid[i]) + ":" + temp_dir + "\\extracted sub " + str(trackid[i]) + ".ass")
+            extract_args.append(str(trackid[i]) + ":" + os.path.join(temp_dir, "extracted sub " + str(trackid[i]) + ".ass"))
         subprocess.call([mkv_extract_path] + [output_file] + extract_args)
 
         #get attachment ids and names of all fonts
@@ -482,7 +484,7 @@ while ep_num < int(end_episode)+1:
         print("\nExtracting fonts from output file...", end="")
         extract_args = ["attachments"]
         for i in range(0, len(aid)):
-            extract_args.append(str(aid[i][0]) + ":" + temp_dir + "\\" + aid[i][1])
+            extract_args.append(str(aid[i][0]) + ":" + os.path.join(temp_dir, aid[i][1]))
         subprocess.call([mkv_extract_path] + [output_file] + extract_args, stdout=subprocess.DEVNULL)
         print("   Done.")
 
@@ -490,37 +492,43 @@ while ep_num < int(end_episode)+1:
             print("Copying extracted fonts to folder...", end="")
             extract_args = ["attachments"]
             for i in range(0, len(aid)):
-                extract_args.append(str(aid[i][0]) + ":" + os.path.dirname(output_file) + "\\Fonts\\" + aid[i][1])
+                extract_args.append(str(aid[i][0]) + ":" + os.path.join(os.path.dirname(output_file), "Fonts", aid[i][1]))
             subprocess.call([mkv_extract_path] + [output_file] + extract_args, stdout=subprocess.DEVNULL)
             print("   Done.")
 
-        #fontCollector
-        #detect all ass files in folder, then mux all needed fonts
+
+        #make log file if log is enabled
+        if font_collector_log:
+            print("\nLogging...")
+            if first_ep:
+                log_path = os.path.join(os.path.dirname(output_file), "Fonts", "!fc - " + datetime.datetime.now().strftime("%Y.%m.%d %H-%M-%S") + ".log")
+                if not exists(os.path.dirname(log_path)):
+                    os.mkdir(os.path.dirname(log_path))
+                with open(log_path, "w") as log:
+                    log.write("\nEpisode " + ep_string + ":\n")
+            else:
+                with open(log_path, "a") as log:
+                    log.write("\nEpisode " + ep_string + ":\n")
+
+        #detect all ass files in folder
         fontcollector_args = []
         print("\nFinding necessary fonts and muxing...")
         for root, dirs, files in os.walk(temp_dir):
             for file in files:
                 if file.endswith(".ass"):
                     fontcollector_args.append(os.path.join(root, file))
-        subprocess.call(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args)
 
-        #do the same but log
-        cur_ep_font_log = []
-        if font_collector_log:
-            print("\nLogging...")
-            if first_ep:
-                log_path = os.path.dirname(output_file) + "\\Fonts\\!fontcollector - " + datetime.datetime.now().strftime("%Y.%m.%d %H-%M-%S") + ".log"
-                with open(log_path, "w") as log:
-                    log.write("\nEpisode " + ep_string + ":\n")
-            else:
-                with open(log_path, "a") as log:
-                    log.write("\nEpisode " + ep_string + ":\n")
-            
+        #run fontcollector and mux all needed fonts
+        if not font_collector_log:
+            subprocess.call(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args)
+
+        #same but with log
+        else:
             with open(log_path, "a") as log:
-                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
-                    for line in p.stdout:
+                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                    for line in p.stderr:
                         log.write(line)
-                        cur_ep_font_log.append(line)
+                        print(line, end="")
                 log.write("\n")
 
         #remove temp dir
@@ -542,7 +550,7 @@ while ep_num < int(end_episode)+1:
                 crcstr = crcstr + "0"
         crcstr = crcstr + str(hex(crc)[2:]).upper()
         print("CRC is [" + crcstr + "]")
-        os.rename(output_file, output_file.replace("CRC", crcstr))
+        os.rename(output_file, output_file.replace(crc_var_name, crcstr))
 
     print('\nFinished Processing ----------------')
     ep_num += 1
