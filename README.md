@@ -115,7 +115,7 @@ The script will offset the episode numbers in the options file by a certain amou
 
 The script will mux different (specified) attachments for each episode. Can be used instead of the automatic font muxer.
 
-- Create a separate folder for each episode, with the files for each episode in their respective folders.
+- Create a separate folder for each episode, with the attachments for each episode in their respective folders.
 
     - For example, if you have different font attachments for episodes 1 and 2, make folders called `..\01` and `..\02`, with the attachments for episode 1 in `..\01` and those for episode 2 in `..\02`.
 
