@@ -13,7 +13,7 @@
 -  [Python 3](https://www.python.org/downloads/)
 
 -  [FontCollector](https://github.com/moi15moi/FontCollector) (Optional, required for [automatic font muxing](#automatic-font-muxing).)
-    - Install with `pip install git+https://github.com/moi15moi/FontCollector.git`
+    - Install with `pip install FontCollector`
 
 ## Helpful tools: 
 - [Advanced Renamer](https://www.advancedrenamer.com/) to batch rename files.
