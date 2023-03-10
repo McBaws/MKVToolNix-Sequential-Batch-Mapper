@@ -435,8 +435,6 @@ while ep_num < int(end_episode)+1:
             options_data_temp.append('--title')
             options_data_temp.append(mkvtitle)
             title_muxed = True
-    
-    print(options_data_temp)
 
     #call mkvmerge
     print('Starting Episode (' + str(ep_num) + '/' + str(int(end_episode)) + ') ---------------')
