@@ -7,6 +7,8 @@ import zlib
 import shutil
 import datetime
 import re
+from colorama import Fore, init
+init(convert=True)
 
 #set up config variables
 config_filename = 'mkvconfig.json'
@@ -460,7 +462,7 @@ while ep_num < int(end_episode)+1:
             if v == "|  + Codec ID: S_TEXT/ASS":
                 for x in range(0,1000):
                     if "Track number" in mkvinfo_data[i-x]:
-                        trackid.append(int(mkvinfo_data[i-x][-2:-1]))
+                        trackid.append(int(re.findall(r'\d+', mkvinfo_data[i-x])[-1]))
                         break
 
         #extract all subtitle files from output mkv
@@ -516,9 +518,19 @@ while ep_num < int(end_episode)+1:
                 if file.endswith(".ass"):
                     fontcollector_args.append(os.path.join(root, file))
 
+        missing_fonts = 0
+
         #run fontcollector and mux all needed fonts
         if not font_collector_log:
-            subprocess.call(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args)
+            with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                for line in p.stderr:
+                    if "All fonts found" in line:
+                        print(f"{Fore.GREEN}", line, f"{Fore.RESET}", end="")
+                    elif "fonts could not be found" in line:
+                        missing_fonts += int(re.findall(r'\d+', line)[0])
+                        print(f"{Fore.RED}", line, f"{Fore.RESET}", end="")
+                    else:
+                        print(line, end="")
 
         #same but with log
         else:
@@ -526,8 +538,34 @@ while ep_num < int(end_episode)+1:
                 with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
                     for line in p.stderr:
                         log.write(line)
-                        print(line, end="")
+                        if "All fonts found" in line:
+                            print(f"{Fore.GREEN}", line, f"{Fore.RESET}", end="")
+                        elif "fonts could not be found" in line:
+                            missing_fonts += int(re.findall(r'\d+', line)[0])
+                            print(f"{Fore.RED}", line, f"{Fore.RESET}", end="")
+                        else:
+                            print(line, end="")
                 log.write("\n")
+
+        #outputs how many fonts were found missing
+        if not font_collector_log:
+            if missing_fonts == 0:
+                print(f"\n{Fore.GREEN}All fonts were found and muxed! :){Fore.RESET}")
+            elif missing_fonts == 1:
+                print(f"\n{Fore.RED}1 font was not found! :({Fore.RESET}")
+            elif missing_fonts > 1:
+                print(f"\n{Fore.RED}At least {missing_fonts} fonts were not found! :({Fore.RESET}")
+
+        #same but with log
+        else:
+            with open(log_path, "a") as log:
+                if missing_fonts == 0:
+                    log.write(f"All fonts were found and muxed! :)")
+                elif missing_fonts == 1:
+                    log.write(f"1 font was not found! :(")
+                elif missing_fonts > 1:
+                    log.write(f"At least {missing_fonts} fonts were not found! :(")
+
 
         #remove temp dir
         shutil.rmtree(temp_dir)
@@ -555,5 +593,4 @@ while ep_num < int(end_episode)+1:
     first_ep = False
 
 print('\n\nAll files have been processed.')
-input('<press any key to exit>')
 quit()
