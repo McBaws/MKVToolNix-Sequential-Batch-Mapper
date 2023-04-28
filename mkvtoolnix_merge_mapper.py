@@ -365,7 +365,7 @@ while ep_num < int(end_episode)+1:
                 #replace options data with matched filename
                 options_data_temp[i] = completion_path + v[x+3:]
 
-        if "**" in v:
+        elif "**" in v:
             v = options_data_temp[i]
             #finds index of "**"
             x = v.index("**")
