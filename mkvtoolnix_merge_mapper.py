@@ -29,6 +29,7 @@ default_config = {
 
 "auto_font_mux":"",
 "font_collector_log":"no",
+"additional_fonts":[],
 
 "titles_in_filename":"",
 "titles_in_mkv":"",
@@ -72,6 +73,7 @@ mkvtitles_filename = config['mkvtitles_filename']
 
 auto_font_q = config['auto_font_mux']
 font_collector_log = config['font_collector_log']
+additional_fonts = config['additional_fonts']
 
 titles_filename_q = config['titles_in_filename']
 titles_mux_q = config['titles_in_mkv']
@@ -522,7 +524,7 @@ while ep_num < int(end_episode)+1:
 
         #run fontcollector and mux all needed fonts
         if not font_collector_log:
-            with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+            with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir] + additional_fonts + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
                 for line in p.stderr:
                     if "All fonts found" in line:
                         print(f"{Fore.GREEN}", line, f"{Fore.RESET}", end="")
@@ -535,7 +537,7 @@ while ep_num < int(end_episode)+1:
         #same but with log
         else:
             with open(log_path, "a") as log:
-                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir] + additional_fonts + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
                     for line in p.stderr:
                         log.write(line)
                         if "All fonts found" in line:
