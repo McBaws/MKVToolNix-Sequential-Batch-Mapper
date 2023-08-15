@@ -327,7 +327,7 @@ while ep_num < int(end_episode)+1:
                 options_data_temp[i] = ""
                 title_muxed = True
 
-        if "***" in v:
+        if "***" in options_data_temp[i]:
             completion_pos = []
             #gets indexes where "***" appears
             for x in range(len(v)):
@@ -365,7 +365,7 @@ while ep_num < int(end_episode)+1:
                 #replace options data with matched filename
                 options_data_temp[i] = completion_path + v[x+3:]
 
-        elif "**" in v:
+        if "**" in options_data_temp[i]:
             v = options_data_temp[i]
             #finds index of "**"
             x = v.index("**")
