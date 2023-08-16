@@ -29,7 +29,7 @@ default_config = {
 
 "auto_font_mux":"",
 "font_collector_log":"no",
-"additional_fonts_folder":"",
+"additional_fonts_folder":[""],
 
 "titles_in_filename":"",
 "titles_in_mkv":"",
@@ -178,19 +178,18 @@ if titles_found or mkvtitles_found:
 
 
 #asks for range of episodes to mux
-print('\n\nEpisode Ranges:   (eg: 1:2,4,6:24)')
-
+print('\n\nEpisode Ranges:')
 ep_ranges_in = input()
 ep_ranges_in = ep_ranges_in.split(",")
 ep_ranges = []
 
-for range, i in ep_ranges_in:
-    if "-" in range:
-        r = range.split("-")
-        for n in range(r[0], r[1]+1):
+for i, ep_range in enumerate(ep_ranges_in):
+    if "-" in ep_range:
+        r = ep_range.split("-")
+        for n in range(int(r[0]), int(r[1])+1):
             ep_ranges.append(n)
     else:
-        ep_ranges.append(int(range))
+        ep_ranges.append(int(ep_range))
 
 
 #loads options file
@@ -199,7 +198,7 @@ with open(options_filename) as json_file:
 
 first_ep = True
 
-for ep_num in ep_ranges:
+for ep_num_absolute, ep_num in enumerate(ep_ranges):
     options_data_temp = []
     options_data_temp += options_data
 
@@ -446,7 +445,7 @@ for ep_num in ep_ranges:
             title_muxed = True
 
     #call mkvmerge
-    print('Starting Episode (' + str(ep_num) + '/' + str(len(ep_ranges)) + ') ---------------')
+    print('Starting Episode (' + str(ep_num_absolute+1) + '/' + str(len(ep_ranges)) + ') ---------------')
     if not skip_mux:
         subprocess.call([mkv_merge_path] + options_data_temp)
 
@@ -540,6 +539,8 @@ for ep_num in ep_ranges:
                     elif "fonts could not be found" in line:
                         missing_fonts += int(re.findall(r'\d+', line)[0])
                         print(f"{Fore.RED}", line, f"{Fore.RESET}", end="")
+                    elif "Used on lines" in line:
+                        pass
                     else:
                         print(line, end="")
 
