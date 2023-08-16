@@ -327,7 +327,7 @@ while ep_num < int(end_episode)+1:
                 options_data_temp[i] = ""
                 title_muxed = True
 
-        if "***" in v:
+        if "***" in options_data_temp[i]:
             completion_pos = []
             #gets indexes where "***" appears
             for x in range(len(v)):
@@ -365,7 +365,7 @@ while ep_num < int(end_episode)+1:
                 #replace options data with matched filename
                 options_data_temp[i] = completion_path + v[x+3:]
 
-        if "**" in v:
+        if "**" in options_data_temp[i]:
             v = options_data_temp[i]
             #finds index of "**"
             x = v.index("**")
@@ -447,10 +447,14 @@ while ep_num < int(end_episode)+1:
         print("\nAutomatically muxing required fonts...")
 
         print("Extracting subtitle files...")
+
         #output mkvinfo for output file to a temp directory, then read it
-        temp_dir = os.path.join(os.path.dirname(output_file), "temp")
-        if exists(temp_dir):
-            shutil.rmtree(temp_dir)
+        temp_dir = os.path.join(os.path.dirname(output_file), "mkvtemp")
+        x=2
+        while exists(temp_dir):
+            temp_dir = os.path.join(os.path.dirname(output_file), "mkvtemp" + str(x))
+            x+=1
+
         mkvinfo_output_file = os.path.join(temp_dir, "mkvinfo.txt")
         subprocess.call([mkv_info_path] + [output_file] + ["--redirect-output"] + [mkvinfo_output_file], stdout=subprocess.DEVNULL)
         with open(mkvinfo_output_file, encoding='utf-8', errors='ignore') as mkvinfo:
