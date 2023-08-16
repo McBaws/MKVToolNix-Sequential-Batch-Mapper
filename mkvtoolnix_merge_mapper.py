@@ -29,6 +29,7 @@ default_config = {
 
 "auto_font_mux":"",
 "font_collector_log":"no",
+"additional_fonts_folder":"",
 
 "titles_in_filename":"",
 "titles_in_mkv":"",
@@ -72,6 +73,7 @@ mkvtitles_filename = config['mkvtitles_filename']
 
 auto_font_q = config['auto_font_mux']
 font_collector_log = config['font_collector_log']
+additional_fonts_folder = config['additional_fonts_folder']
 
 titles_filename_q = config['titles_in_filename']
 titles_mux_q = config['titles_in_mkv']
@@ -176,28 +178,33 @@ if titles_found or mkvtitles_found:
 
 
 #asks for range of episodes to mux
-print('\n\nStart Episode:')
-start_episode = input()
+print('\n\nEpisode Ranges:   (eg: 1:2,4,6:24)')
 
-print('\nEnd Episode:')
-end_episode = input()
-print("")
+ep_ranges_in = input()
+ep_ranges_in = ep_ranges_in.split(",")
+ep_ranges = []
+
+for range, i in ep_ranges_in:
+    if "-" in range:
+        r = range.split("-")
+        for n in range(r[0], r[1]+1):
+            ep_ranges.append(n)
+    else:
+        ep_ranges.append(int(range))
+
 
 #loads options file
 with open(options_filename) as json_file:
     options_data = json.load(json_file)
 
-ep_num = int(start_episode)
-
 first_ep = True
 
-while ep_num < int(end_episode)+1:
+for ep_num in ep_ranges:
     options_data_temp = []
     options_data_temp += options_data
 
     if skip_episodes:
         if ep_num in skip_episodes:
-            ep_num += 1
             continue
 
     #reads titles for given episode
@@ -439,7 +446,7 @@ while ep_num < int(end_episode)+1:
             title_muxed = True
 
     #call mkvmerge
-    print('Starting Episode (' + str(ep_num) + '/' + str(int(end_episode)) + ') ---------------')
+    print('Starting Episode (' + str(ep_num) + '/' + str(len(ep_ranges)) + ') ---------------')
     if not skip_mux:
         subprocess.call([mkv_merge_path] + options_data_temp)
 
@@ -526,7 +533,7 @@ while ep_num < int(end_episode)+1:
 
         #run fontcollector and mux all needed fonts
         if not font_collector_log:
-            with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+            with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir] + additional_fonts_folder + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
                 for line in p.stderr:
                     if "All fonts found" in line:
                         print(f"{Fore.GREEN}", line, f"{Fore.RESET}", end="")
@@ -539,7 +546,7 @@ while ep_num < int(end_episode)+1:
         #same but with log
         else:
             with open(log_path, "a") as log:
-                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir, "--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir] + additional_fonts_folder + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
                     for line in p.stderr:
                         log.write(line)
                         if "All fonts found" in line:
@@ -593,7 +600,6 @@ while ep_num < int(end_episode)+1:
         os.rename(output_file, output_file.replace(crc_var_name, crcstr))
 
     print('\nFinished Processing ----------------')
-    ep_num += 1
     first_ep = False
 
 print('\n\nAll files have been processed.')

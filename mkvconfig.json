@@ -13,6 +13,7 @@
 
     "auto_font_mux":"",
     "font_collector_log":"no",
+    "additional_fonts_folder":[""],
 
     "titles_in_filename":"",
     "titles_in_mkv":"",

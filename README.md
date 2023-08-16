@@ -57,7 +57,9 @@
 
 11. Run `mkvtoolnix_merge_mapper.py`.
   
-12. When prompted, enter the range of episode numbers you want to mux. Your files will be sequentially muxed into the set output directory (`mkvmerge_out` by default).
+12. When prompted, enter the range of episode numbers you want to mux. These should be in the format `1-2,4,6-22,24`, where `-` denotes a range and `,` acts as a separator. In this example, episodes 3, 5, and 23 are skipped.
+
+Your files will then be muxed in the order specified into the set output directory (`mkvmerge_out` by default).
 
 
 ## Titles
@@ -82,7 +84,7 @@ This feature requires [FontCollector](https://github.com/moi15moi/FontCollector)
 - Simply run `mkvtoolnix_merge_mapper.py`, and when prompted on whether you want to automatically mux fonts, input `yes` or `y`.
     - This preference can also be set in the `mkvconfig.json` file
 
-- The script will only be able to mux fonts that are installed or that are in one of the input mkv files.
+- If you want to mux fonts that aren't installed or in one of the input mkv files, you have to specify their directory in the `additional_fonts_folder` in `mkvconfig`. Multiple folders can be specified.
 
 - I have introduced a feature where a log of FontCollector's activity is generated in the output directory, and all fonts from input mkvs will be copied to a `Fonts` folder. This should make it easier to spot and fix errors. It can be enabled in `mkvconfig.json`.
 
