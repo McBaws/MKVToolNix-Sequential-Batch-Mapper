@@ -51,7 +51,7 @@
 
 9. Edit `mkvconfig.json` and insert the path to the MKVToolNix folder into the quotes after the variable `mkv_merge_path`. You can also change other script variables here.
 
-    - Note: You MUST replace every instance of a backslash `\` in mkvmerge's filepath with two backslashes `\\`.
+    - You MUST replace every instance of a backslash `\` in mkvmerge's filepath with two backslashes `\\`.
 
 10. Optional edits to `options.json`. See following sections.
 
@@ -59,7 +59,9 @@
   
 12. When prompted, enter the range of episode numbers you want to mux. These should be in the format `1-2,4,6-22,24`, where `-` denotes a range and `,` acts as a separator. In this example, episodes 3, 5, and 23 are skipped.
 
-Your files will then be muxed in the order specified into the set output directory (`mkvmerge_out` by default).
+    - The order you specify the episodes in will be the order in which they are muxed. So if you enter `5-8,1-4,9`, episodes 5-8 will be muxed before 1-4, with 9 being muxed at the end.
+
+Your files will then be muxed into the set output directory (`mkvmerge_out` by default).
 
 
 ## Titles
