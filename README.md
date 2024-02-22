@@ -12,7 +12,7 @@
 
 -  [Python 3](https://www.python.org/downloads/)
 
-- `pip install -U colorama git+https://github.com/moi15moi/FontCollector.git`
+- `pip install FontCollector Colorama`
 
     - [FontCollector](https://github.com/moi15moi/FontCollector) is used for [automatic font muxing](#automatic-font-muxing)
 
