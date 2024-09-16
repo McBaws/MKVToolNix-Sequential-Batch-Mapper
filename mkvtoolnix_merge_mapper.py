@@ -235,7 +235,7 @@ for ep_num_absolute, ep_num in enumerate(ep_ranges):
                 #how a version number (v2, v3) affects title placement
                 ver_calc = False
                 #regex to find ver num
-                for m in re.finditer("v\d{1,}", v):
+                for m in re.finditer(r"v\d{1,}", v):
                     ver_start = m.start()
                     ver_end = m.end()
                     #check if ver num comes after episode number, but not more than 2 indexes after episode number
@@ -532,7 +532,7 @@ for ep_num_absolute, ep_num in enumerate(ep_ranges):
 
         #run fontcollector and mux all needed fonts
         if not font_collector_log:
-            with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir] + additional_fonts_folder + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+            with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts-recursive", temp_dir] + additional_fonts_folder + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
                 for line in p.stderr:
                     if "All fonts found" in line:
                         print(f"{Fore.GREEN}", line, f"{Fore.RESET}", end="")
@@ -547,7 +547,7 @@ for ep_num_absolute, ep_num in enumerate(ep_ranges):
         #same but with log
         else:
             with open(log_path, "a") as log:
-                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts", temp_dir] + additional_fonts_folder + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
+                with subprocess.Popen(["fontcollector", "-mkv", output_file, "-d", "-mkvpropedit", mkv_propedit_path, "--additional-fonts-recursive", temp_dir] + additional_fonts_folder + ["--input"] + fontcollector_args, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, text=True) as p:
                     for line in p.stderr:
                         log.write(line)
                         if "All fonts found" in line:
