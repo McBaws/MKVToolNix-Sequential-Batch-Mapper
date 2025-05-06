@@ -1,5 +1,7 @@
 # MKVToolNix Sequential Batch Mapper
 
+Notice: If you have any python knowledge, I recommend you use [muxtools](https://github.com/Jaded-Encoding-Thaumaturgy/muxtools) instead. You can find a guide [here](https://muxtools.vodes.pw/).
+
 ## Notes:
 
  - This is useful for remuxes where each episode has the same basic input and output variables.
