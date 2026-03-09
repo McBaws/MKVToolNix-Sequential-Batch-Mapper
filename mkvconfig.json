@@ -22,5 +22,8 @@
     "skip_mux":"",
     "skip_episodes":[],
 
+    "write_stats":"yes",
+    "remove_unmatched_files":"no",
+
     "CRC_buffer":8192
 }

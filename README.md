@@ -25,7 +25,7 @@ Notice: If you have any python knowledge, I recommend you use [muxtools](https:/
 
 1. Clone this repository.
 
-2. Make sure all your MKV files have the same name apart from the episode numbers. 
+2. Make sure all your input files have the same name apart from the episode numbers. 
 
     - Note: this can now be bypassed by using [filepath autocompletion](#autocomplete-filepath).
 
@@ -50,6 +50,8 @@ Notice: If you have any python knowledge, I recommend you use [muxtools](https:/
 8. Find the MKVToolNix folder and get its path. (`Shift + Right-Click > Copy as path` from Windows File Explorer).
 
     - Typically `C:\\Program Files\\MKVToolNix`.
+
+    - Alternatively, if you have mkvmerge in your PATH, leave this blank.
 
 9. Edit `mkvconfig.json` and insert the path to the MKVToolNix folder into the quotes after the variable `mkv_merge_path`. You can also change other script variables here.
 
@@ -98,11 +100,11 @@ This feature requires [FontCollector](https://github.com/moi15moi/FontCollector)
 
 The script will autocomplete the paths of specified files. Useful if the filenames you want to use have a CRC or episode name in them, which means they won't match the rule in your options file. (For example, if the releases you want to remux have filenames like `Show - 01 - dumb title.mkv`, `Show - 02 - different title.mkv`, the rule `Show - EPNUM.mkv` won't work.)
 
-- Put three stars (`***`) wherever you want the script to autocomplete the filename. Using the example above, the rule `Show - EPNUM - ***` would match both of those filenames. This can also be used in folder names.
+Glob pattern syntax is now used. Use `*` to match any sequence of characters or `?` to match exactly one character. [Click here](https://www.geeksforgeeks.org/python/how-to-use-glob-function-to-find-files-recursively-in-python/) for more information.
 
-- Put two stars (`**`) if you want to specify an extension for the file. For example, let's say you have both `Show - 01 - dumb title.mkv` and `Show - 01 - dumb title.ass` in the same directory. In this case the rule `Show - EPNUM - **.mkv` would match the first file and `Show - EPNUM - **.ass` would match the second.
+If no matching files are found, there is an option to remove the file from the mux settings. If multiple matching files are found, the script will error and quit early.
 
-- As long as your rule gives enough information to single out one file, it will be accepted.
+As long as your rule gives enough information to single out one file, it will be accepted.
 
 ## Calculate CRC
 
@@ -139,6 +141,16 @@ The script will mux different (specified) attachments for each episode. Can be u
     - `attachment-name` can be left as-is.
 
     - Replace the episode number in the folder name with `EPNUM`.
+
+## Other
+
+`skip_mux` will skip the initial muxing step that calls mkvmerge, but performs all other operations such as font muxing and CRC calculation.
+
+`skip_episodes` takes a list of episode numbers that the script will then always skip.
+
+`write_stats` will write track stats to the mkv file and remove some potentially identifying information.
+
+
 
 ## License
 
